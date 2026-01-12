@@ -14,9 +14,16 @@ import (
 )
 
 func main() {
-	// Define a flag -log
+	versionFlag := flag.Bool("version", false, "Exibe a versão da ferramenta")
 	logFlag := flag.String("log", "", "Caminho customizado para o arquivo de log")
 	flag.Parse()
+
+	if *versionFlag {
+		fmt.Printf("Measure Build %s\n", metrics.Version)
+		fmt.Printf("Commit: %s\n", metrics.GitCommit)
+		fmt.Printf("Build Time: %s\n", metrics.BuildTime)
+		return
+	}
 
 	// Os argumentos após as flags são o comando real
 	cmdArgs := flag.Args()

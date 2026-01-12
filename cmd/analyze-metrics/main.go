@@ -21,7 +21,10 @@ func main() {
 	logFlag := flag.String("log", "", "Caminho do arquivo de log para analisar")
 	flag.Parse()
 
-	logPath, _ := metrics.GetLogFilePath(*logFlag)
+	logPath, err := metrics.PrintResolvedLogPath(os.Stdout, "Usando arquivo de log: ", *logFlag)
+	if err != nil {
+		return
+	}
 
 	file, err := os.Open(logPath)
 	if err != nil {

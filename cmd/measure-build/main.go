@@ -16,12 +16,20 @@ import (
 func main() {
 	versionFlag := flag.Bool("version", false, "Exibe a versão da ferramenta")
 	logFlag := flag.String("log", "", "Caminho customizado para o arquivo de log")
+
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Uso: measure-build [-log path] <comando> [args...]\n")
+		flag.PrintDefaults()
+		metrics.PrintResolvedLogPath(flag.CommandLine.Output(), "Arquivo de log: ", flag.Lookup("log").Value.String())
+	}
+
 	flag.Parse()
 
 	if *versionFlag {
 		fmt.Printf("Measure Build %s\n", metrics.Version)
 		fmt.Printf("Commit: %s\n", metrics.GitCommit)
 		fmt.Printf("Build Time: %s\n", metrics.BuildTime)
+		metrics.PrintResolvedLogPath(os.Stdout, "Arquivo de log: ", *logFlag)
 		return
 	}
 

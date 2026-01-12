@@ -18,10 +18,13 @@ Ao executar:
 ## Estrutura do projeto
 
 - `cmd/measure-build/main.go`: CLI principal.
+- `cmd/analyze-metrics/main.go`: utilitário para analisar o arquivo JSONL e gerar relatórios por semana.
 - `internal/runner/exec.go`: executor do comando e medição de duração (`runner.Run`).
 - `internal/git/info.go`: coleta branch/commit (`git.GetInfo`).
 - `internal/metrics/models.go`: modelo da métrica (`metrics.BuildMetric`).
 - `internal/metrics/writer.go`: persistência em JSONL (`metrics.Save`).
+- `internal/metrics/models.go`: modelo da métrica (`metrics.BuildMetric`).
+- `internal/metrics/version.go`: metadados de versão embutidos via ldflags (versão, commit, build time).
 
 ## Como usar
 
@@ -55,11 +58,18 @@ Medir qualquer comando:
 
 ## Onde as métricas são salvas
 
-As métricas são gravadas em:
+Por padrão as métricas são gravadas em:
 
 - `~/.local/share/build-metrics/build_log.jsonl`
 
 Cada execução adiciona **uma linha** (JSON) ao arquivo.
+
+Você pode sobrescrever o caminho do arquivo de log com duas opções (ordem de prioridade):
+
+1. Flag da CLI `-log <path>` — exemplo: `./measure-build -log /tmp/build_log.jsonl make build`
+2. Variável de ambiente `BUILD_METRICS_LOG` — exemplo: `export BUILD_METRICS_LOG=/tmp/build_log.jsonl`
+
+Internamente o binário resolve o caminho na seguinte ordem: flag `-log` (se fornecida), depois a variável de ambiente `BUILD_METRICS_LOG`, e por fim o caminho padrão em `~/.local/share/...`.
 
 ## Campos registrados (schema)
 
@@ -69,6 +79,7 @@ O objeto gravado segue o struct `metrics.BuildMetric`:
 - `user`
 - `hostname`
 - `os` (ex.: `linux`, `darwin`, `windows`)
+- `project` (nome do projeto git ou `"unknown"`)
 - `branch` (ou `"unknown"`)
 - `commit` (hash curto, ou `"unknown"`)
 - `command` (representação do array de args)
@@ -97,6 +108,22 @@ O objeto gravado segue o struct `metrics.BuildMetric`:
 
 	```bash
 	go build -trimpath ./cmd/measure-build
+	```
+
+- **Build com `Makefile`**:
+
+	Este repositório contém um `Makefile` que prepara e compila os binários em `./dist`. Os alvos principais são:
+
+	- `make` — prepara e compila os binários (padrão `all`).
+	- `make build` — compila os binários e os coloca em `./dist`.
+	- `make clean` — remove a pasta `dist`.
+	- `make run ARGS="..."` — compila e executa o `build-meter` com os `ARGS` fornecidos.
+
+	Exemplo de uso:
+
+	```bash
+	# compila tudo
+	make
 	```
 
 - **Instalar no `$GOBIN`/`$GOPATH/bin`**:

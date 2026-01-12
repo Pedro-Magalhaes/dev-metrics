@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -32,4 +34,17 @@ func GetLogFilePath(override string) (string, error) {
 func EnsureLogDir(targetPath string) error {
 	dir := filepath.Dir(targetPath)
 	return os.MkdirAll(dir, 0755)
+}
+
+// PrintResolvedLogPath resolves the log file path (using same priority as GetLogFilePath)
+// and writes a descriptive line to the provided writer. It returns the resolved
+// path or an error if resolution failed.
+func PrintResolvedLogPath(w io.Writer, label string, override string) (string, error) {
+	lp, err := GetLogFilePath(override)
+	if err != nil {
+		fmt.Fprintf(w, "%s(erro ao resolver: %v)\n", label, err)
+		return "", err
+	}
+	fmt.Fprintf(w, "%s%s\n", label, lp)
+	return lp, nil
 }

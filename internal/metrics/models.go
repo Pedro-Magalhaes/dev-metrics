@@ -6,7 +6,7 @@ type BuildMetric struct {
 	User        string  `json:"user"`
 	Hostname    string  `json:"hostname"`
 	OS          string  `json:"os"`
-	Project      string  `json:"project"`
+	Project     string  `json:"project"`
 	Branch      string  `json:"branch"`
 	Commit      string  `json:"commit"`
 	Command     string  `json:"command"`

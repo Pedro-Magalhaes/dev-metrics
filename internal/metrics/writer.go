@@ -14,27 +14,19 @@ type fileWriter interface {
 
 // package-level variables so tests can mock filesystem operations.
 var (
-	userHomeDir = os.UserHomeDir
-	mkdirAll    = os.MkdirAll
-	openFile    = func(name string, flag int, perm os.FileMode) (fileWriter, error) {
+	openFile = func(name string, flag int, perm os.FileMode) (fileWriter, error) {
 		return os.OpenFile(name, flag, perm)
 	}
 )
 
-// Save grava a métrica no arquivo ~/.local/share/build-metrics/build_log.jsonl
-func Save(m BuildMetric) error {
-	homeDir, err := userHomeDir()
-	if err != nil {
+// Save writes the metric to the specified file path in JSONL format
+func Save(m BuildMetric, filePath string) error {
+	logDir := filepath.Dir(filePath)
+	if err := EnsureLogDir(logDir); err != nil {
 		return err
 	}
 
-	logDir := filepath.Join(homeDir, ".local", "share", "build-metrics")
-	if err := mkdirAll(logDir, 0755); err != nil {
-		return err
-	}
-
-	logFile := filepath.Join(logDir, "build_log.jsonl")
-	f, err := openFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := openFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/user"
@@ -13,13 +14,25 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Uso: measure-build <comando> [argumentos...]")
+	// Define a flag -log
+	logFlag := flag.String("log", "", "Caminho customizado para o arquivo de log")
+	flag.Parse()
+
+	// Os argumentos após as flags são o comando real
+	cmdArgs := flag.Args()
+
+	if len(cmdArgs) < 1 {
+		fmt.Println("Uso: measure-build [-log path] <comando> [args...]")
 		os.Exit(1)
 	}
 
-	// 1. Executa o comando solicitado
-	cmdArgs := os.Args[1:]
+	// Resolve o caminho do log
+	logPath, err := metrics.GetLogFilePath(*logFlag)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Erro ao resolver caminho do log: %v\n", err)
+		os.Exit(1)
+	}
+
 	duration, exitCode := runner.Run(cmdArgs)
 
 	// 2. Coleta metadados
@@ -49,7 +62,7 @@ func main() {
 	}
 
 	// 4. Salva (falha silenciosa para não atrapalhar o dev)
-	if err := metrics.Save(metric); err != nil {
+	if err := metrics.Save(metric, logPath); err != nil {
 		fmt.Fprintf(os.Stderr, "[Metrics Error] %v\n", err)
 	}
 

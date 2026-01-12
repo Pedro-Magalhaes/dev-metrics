@@ -1,0 +1,5 @@
+# Se você usar pasta de output
+/bin/
+/dist/
+
+.vscode/    

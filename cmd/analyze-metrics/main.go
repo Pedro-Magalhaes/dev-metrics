@@ -31,8 +31,8 @@ func main() {
 	}
 	defer file.Close()
 
-	// Mapa para agrupar: "Ano-Semana" -> Estatísticas
-	report := make(map[string]*WeeklyStats)
+	// Mapa para agrupar: "Ano-Semana" -> Estatísticas por projeto
+	reportByProject := make(map[string]map[string]*WeeklyStats)
 
 	// 2. Ler linha por linha (JSONL)
 	_, err = metrics.ScanJSONL(file, false, func(m metrics.BuildMetric) error {
@@ -40,6 +40,11 @@ func main() {
 		t, err := time.Parse(time.RFC3339, m.Timestamp)
 		if err != nil {
 			return nil
+		}
+		report := reportByProject[m.Project]
+		if report == nil {
+			report = make(map[string]*WeeklyStats)
+			reportByProject[m.Project] = report
 		}
 
 		// Gerar chave da semana (ex: 2024-W32)
@@ -60,14 +65,17 @@ func main() {
 	}
 
 	// 3. Exibir Relatório
-	fmt.Println("====================================================")
-	fmt.Printf("%-12s | %-12s | %-12s | %-10s\n", "Semana", "Total (min)", "Média (s)", "Builds")
-	fmt.Println("----------------------------------------------------")
+	for projeto, reportFromProject := range reportByProject {
+		fmt.Printf("\n%-12s : %-12s\n", "Projeto", projeto)
+		fmt.Println("====================================================")
+		fmt.Printf("%-12s | %-12s | %-12s | %-10s\n", "Semana", "Total (min)", "Média (s)", "Builds")
+		fmt.Println("----------------------------------------------------")
 
-	for week, stats := range report {
-		totalMin := stats.TotalDuration / 60
-		avgSec := stats.TotalDuration / float64(stats.Count)
-		fmt.Printf("%-12s | %-12.2f | %-12.1f | %-10d\n", week, totalMin, avgSec, stats.Count)
+		for week, stats := range reportFromProject {
+			totalMin := stats.TotalDuration / 60
+			avgSec := stats.TotalDuration / float64(stats.Count)
+			fmt.Printf("%-12s | %-12.2f | %-12.1f | %-10d\n", week, totalMin, avgSec, stats.Count)
+		}
+		fmt.Println("====================================================")
 	}
-	fmt.Println("====================================================")
 }

@@ -6,6 +6,7 @@ INTERNAL_PKG := dev-metrics/internal/metrics
 # Nomes dos binários
 BUILD_METER := build-meter
 ANALYZE_METER := analyze-meter
+EXPORT_METER := export-meter
 
 # Captura informações do ambiente
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -35,6 +36,9 @@ build: setup
 	
 	@echo "Compilando $(ANALYZE_METER)..."
 	go build -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/$(ANALYZE_METER) $(CMD_DIR)/analyze-metrics
+	
+	@echo "Compilando $(EXPORT_METER)..."
+	go build -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/$(EXPORT_METER) $(CMD_DIR)/export-metrics
 	@echo "Build concluído! Binários disponíveis em ./$(BINARY_DIR)"
 
 # Remove a pasta dist

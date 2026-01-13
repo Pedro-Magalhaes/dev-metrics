@@ -30,10 +30,11 @@ func GetLogFilePath(override string) (string, error) {
 	return filepath.Join(homeDir, ".local", "share", "build-metrics", "build_log.jsonl"), nil
 }
 
-// EnsureLogDir agora recebe o caminho pretendido e garante que a pasta exista
-func EnsureLogDir(targetPath string) error {
-	dir := filepath.Dir(targetPath)
-	return os.MkdirAll(dir, 0755)
+// EnsureLogDir garante que o diretório informado exista.
+//
+// Importante: este método espera receber um caminho de diretório (ex.: filepath.Dir(logFilePath)).
+func EnsureLogDir(dirPath string) error {
+	return os.MkdirAll(dirPath, 0755)
 }
 
 // PrintResolvedLogPath resolves the log file path (using same priority as GetLogFilePath)

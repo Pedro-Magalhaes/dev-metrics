@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -36,18 +34,12 @@ func main() {
 	// Mapa para agrupar: "Ano-Semana" -> Estatísticas
 	report := make(map[string]*WeeklyStats)
 
-	// 2. Ler linha por linha
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		var m metrics.BuildMetric
-		if err := json.Unmarshal(scanner.Bytes(), &m); err != nil {
-			continue
-		}
-
+	// 2. Ler linha por linha (JSONL)
+	_, err = metrics.ScanJSONL(file, false, func(m metrics.BuildMetric) error {
 		// Converter timestamp para o objeto Time do Go
 		t, err := time.Parse(time.RFC3339, m.Timestamp)
 		if err != nil {
-			continue
+			return nil
 		}
 
 		// Gerar chave da semana (ex: 2024-W32)
@@ -60,6 +52,11 @@ func main() {
 
 		report[weekKey].TotalDuration += m.DurationSec
 		report[weekKey].Count++
+		return nil
+	})
+	if err != nil {
+		fmt.Printf("Erro ao ler log: %v\n", err)
+		return
 	}
 
 	// 3. Exibir Relatório

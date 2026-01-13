@@ -19,6 +19,7 @@ Ao executar:
 
 - `cmd/measure-build/main.go`: CLI principal.
 - `cmd/analyze-metrics/main.go`: utilitário para analisar o arquivo JSONL e gerar relatórios por semana.
+- `cmd/export-metrics/main.go`: utilitário para exportar o log JSONL para CSV.
 - `internal/runner/exec.go`: executor do comando e medição de duração (`runner.Run`).
 - `internal/git/info.go`: coleta branch/commit (`git.GetInfo`).
 - `internal/metrics/models.go`: modelo da métrica (`metrics.BuildMetric`).
@@ -70,6 +71,32 @@ Você pode sobrescrever o caminho do arquivo de log com duas opções (ordem de 
 2. Variável de ambiente `BUILD_METRICS_LOG` — exemplo: `export BUILD_METRICS_LOG=/tmp/build_log.jsonl`
 
 Internamente o binário resolve o caminho na seguinte ordem: flag `-log` (se fornecida), depois a variável de ambiente `BUILD_METRICS_LOG`, e por fim o caminho padrão em `~/.local/share/...`.
+
+## Exportar o log JSONL para CSV
+
+Para exportar o arquivo de log (JSON Lines) para CSV:
+
+```bash
+go run ./cmd/export-metrics -out -
+```
+
+Para escrever em um arquivo:
+
+```bash
+go run ./cmd/export-metrics -out /tmp/build_metrics.csv
+```
+
+Você pode sobrescrever o caminho do log com `-log` ou `BUILD_METRICS_LOG` (mesma lógica do `measure-build`):
+
+```bash
+go run ./cmd/export-metrics -log /tmp/build_log.jsonl -out /tmp/build_metrics.csv
+```
+
+Modo estrito (falha ao encontrar uma linha inválida no JSONL):
+
+```bash
+go run ./cmd/export-metrics -strict -out /tmp/build_metrics.csv
+```
 
 ## Campos registrados (schema)
 

@@ -29,6 +29,46 @@ Exportar para CSV:
 ./dist/export-meter -out /tmp/build_metrics.csv
 ```
 
+## Instalação (Linux, sem sudo)
+
+Este projeto instala **3 binários**: `build-meter`, `analyze-meter`, `export-meter`.
+
+### Opção A: compilar e instalar localmente (recomendado para dev)
+
+Instala em `~/.local/bin` (padrão):
+
+```bash
+make install
+```
+
+Garanta que `~/.local/bin` esteja no seu `PATH` (bash/zsh):
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Dica: para imprimir a linha acima:
+
+```bash
+make path-hint
+```
+
+### Opção B: instalar via GitHub Releases (sem Go instalado)
+
+Instala a **última release** publicada do GitHub em `~/.local/bin`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Pedro-Magalhaes/dev-metrics/main/scripts/install.sh | sh
+```
+
+Para instalar uma versão específica:
+
+```bash
+VERSION=v1.2.3 curl -fsSL https://raw.githubusercontent.com/Pedro-Magalhaes/dev-metrics/main/scripts/install.sh | sh
+```
+
+Requisitos do instalador: `curl` (ou `wget`), `tar`, `sha256sum`.
+
 ## Comandos
 
 ### `measure-build` (binário: `build-meter`)

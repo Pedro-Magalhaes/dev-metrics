@@ -51,17 +51,29 @@ jobs:
           mkdir -p artifacts
           # Use ldflags without nested quotes to avoid expansion/quoting issues
           ldflags="-X dev-metrics/internal/metrics.Version=${VERSION} -X dev-metrics/internal/metrics.GitCommit=${GIT_COMMIT} -X dev-metrics/internal/metrics.BuildTime=${BUILD_TIME}"
-          out_mb="artifacts/measure-build-linux-${GOARCH}"
-          out_am="artifacts/analyze-metrics-linux-${GOARCH}"
-          echo "Building $out_mb and $out_am"
-          CGO_ENABLED=0 go build -trimpath -ldflags="$ldflags" -o "$out_mb" ./cmd/measure-build
-          CGO_ENABLED=0 go build -trimpath -ldflags="$ldflags" -o "$out_am" ./cmd/analyze-metrics
+          echo "Building linux/${GOARCH} artifacts for VERSION=${VERSION}"
+
+          build_tool() {
+            name="$1"
+            pkg="$2"
+            bin_path="artifacts/${name}"
+            tgz_path="artifacts/${name}_${VERSION}_linux_${GOARCH}.tar.gz"
+
+            echo "- ${name} (${pkg}) -> ${tgz_path}"
+            CGO_ENABLED=0 go build -trimpath -ldflags="$ldflags" -o "$bin_path" "$pkg"
+            tar -C artifacts -czf "$tgz_path" "$name"
+            rm -f "$bin_path"
+          }
+
+          build_tool "build-meter" "./cmd/measure-build"
+          build_tool "analyze-meter" "./cmd/analyze-metrics"
+          build_tool "export-meter" "./cmd/export-metrics"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-binaries-${{ matrix.arch }}
-          path: artifacts/*
+          path: artifacts/*.tar.gz
 
 # --- JOB DE RELEASE ---
   create-release:
@@ -79,6 +91,13 @@ jobs:
           path: release-artifacts
           pattern: linux-binaries-*
           merge-multiple: true # Coloca todos os arquivos na mesma pasta
+
+      - name: Generate checksums
+        working-directory: release-artifacts
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/}"
+          sha256sum *.tar.gz > "checksums_${TAG}.txt"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

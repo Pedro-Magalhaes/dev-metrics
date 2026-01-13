@@ -3,61 +3,95 @@
 
 Ferramenta em Go para **medir a duração de um comando** (ex.: build, testes, lint) e **registrar métricas** localmente em formato **JSON Lines** (`.jsonl`).
 
-O binário principal é o `measure-build`.
+O fluxo é simples:
 
-## O que este projeto faz
+1) `measure-build` executa um comando e registra uma métrica em JSONL.
+2) `analyze-metrics` analisa o arquivo JSONL e imprime um relatório semanal.
+3) `export-metrics` converte o JSONL para CSV.
 
-Ao executar:
+## Quickstart
 
-- roda o comando que você passou (preservando saída, cores e interatividade);
-- mede o tempo total de execução (em segundos);
-- coleta metadados do ambiente e do Git (branch e commit);
-- grava uma linha JSON por execução em um arquivo local;
-- retorna o **mesmo exit code** do comando original.
-
-## Estrutura do projeto
-
-- `cmd/measure-build/main.go`: CLI principal.
-- `cmd/analyze-metrics/main.go`: utilitário para analisar o arquivo JSONL e gerar relatórios por semana.
-- `cmd/export-metrics/main.go`: utilitário para exportar o log JSONL para CSV.
-- `internal/runner/exec.go`: executor do comando e medição de duração (`runner.Run`).
-- `internal/git/info.go`: coleta branch/commit (`git.GetInfo`).
-- `internal/metrics/models.go`: modelo da métrica (`metrics.BuildMetric`).
-- `internal/metrics/writer.go`: persistência em JSONL (`metrics.Save`).
-- `internal/metrics/models.go`: modelo da métrica (`metrics.BuildMetric`).
-- `internal/metrics/version.go`: metadados de versão embutidos via ldflags (versão, commit, build time).
-
-## Como usar
-
-### 1) Build do binário
-
-Pelo terminal na raiz do projeto:
+Compilar os binários em `./dist`:
 
 ```bash
-go build -o measure-build ./cmd/measure-build
+make build
 ```
 
-### 2) Medir um comando (exemplos)
-
-Medir um build:
+Medir um comando (vai gerar/atualizar o log local):
 
 ```bash
-./measure-build go build ./...
+./dist/build-meter go test ./...
 ```
 
-Medir testes:
+Exportar para CSV:
 
 ```bash
-./measure-build go test ./...
+./dist/export-meter -out /tmp/build_metrics.csv
 ```
 
-Medir qualquer comando:
+## Comandos
+
+### `measure-build` (binário: `build-meter`)
+
+Executa o comando informado, mede a duração e salva uma linha JSON no log.
+
+Exemplos:
 
 ```bash
-./measure-build make build
+./dist/build-meter go build ./...
+./dist/build-meter go test ./...
+./dist/build-meter make build
 ```
 
-## Onde as métricas são salvas
+Flags úteis:
+
+- `-log <path>`: sobrescreve o caminho do arquivo de log.
+
+### `analyze-metrics` (binário: `analyze-meter`)
+
+Analisa o log JSONL e imprime um relatório agrupado por semana (ISO 8601).
+
+```bash
+./dist/analyze-meter
+./dist/analyze-meter -log /tmp/build_log.jsonl
+```
+
+### `export-metrics` (binário: `export-meter`)
+
+Converte o log JSONL para CSV.
+
+- Escreve **CSV válido em stdout** (ou em arquivo com `-out`).
+- Escreve mensagens de status em `stderr`.
+
+Executar via binário:
+
+```bash
+./dist/export-meter -out -
+./dist/export-meter -out /tmp/build_metrics.csv
+./dist/export-meter -log /tmp/build_log.jsonl -out /tmp/build_metrics.csv
+./dist/export-meter -strict -out /tmp/build_metrics.csv
+```
+
+Executar via `go run`:
+
+```bash
+go run ./cmd/export-metrics -out -
+go run ./cmd/export-metrics -out /tmp/build_metrics.csv
+```
+
+Ajuda (flags disponíveis):
+
+```bash
+./dist/export-meter -h
+```
+
+Observações:
+
+- O CSV sempre inclui a primeira linha com o header (nomes das colunas).
+- Por padrão, linhas inválidas no JSONL são ignoradas; use `-strict` para falhar ao primeiro erro.
+- Para capturar somente o CSV (sem mensagens em `stderr`): `... 2>/dev/null`.
+
+## Log: local e configuração
 
 Por padrão as métricas são gravadas em:
 
@@ -65,40 +99,31 @@ Por padrão as métricas são gravadas em:
 
 Cada execução adiciona **uma linha** (JSON) ao arquivo.
 
-Você pode sobrescrever o caminho do arquivo de log com duas opções (ordem de prioridade):
+Você pode sobrescrever o caminho do arquivo de log nesta ordem:
 
-1. Flag da CLI `-log <path>` — exemplo: `./measure-build -log /tmp/build_log.jsonl make build`
-2. Variável de ambiente `BUILD_METRICS_LOG` — exemplo: `export BUILD_METRICS_LOG=/tmp/build_log.jsonl`
+1. Flag da CLI `-log <path>`
+2. Variável de ambiente `BUILD_METRICS_LOG`
+3. Padrão `~/.local/share/build-metrics/build_log.jsonl`
 
-Internamente o binário resolve o caminho na seguinte ordem: flag `-log` (se fornecida), depois a variável de ambiente `BUILD_METRICS_LOG`, e por fim o caminho padrão em `~/.local/share/...`.
-
-## Exportar o log JSONL para CSV
-
-Para exportar o arquivo de log (JSON Lines) para CSV:
+Exemplos:
 
 ```bash
-go run ./cmd/export-metrics -out -
+./dist/build-meter -log /tmp/build_log.jsonl make build
+export BUILD_METRICS_LOG=/tmp/build_log.jsonl
+./dist/analyze-meter
 ```
 
-Para escrever em um arquivo:
+## Formatos e schema
 
-```bash
-go run ./cmd/export-metrics -out /tmp/build_metrics.csv
-```
+### JSONL
 
-Você pode sobrescrever o caminho do log com `-log` ou `BUILD_METRICS_LOG` (mesma lógica do `measure-build`):
+O arquivo de log é JSON Lines (`.jsonl`): uma linha JSON por execução.
 
-```bash
-go run ./cmd/export-metrics -log /tmp/build_log.jsonl -out /tmp/build_metrics.csv
-```
+### CSV
 
-Modo estrito (falha ao encontrar uma linha inválida no JSONL):
+O export usa um header fixo e gera uma linha por métrica.
 
-```bash
-go run ./cmd/export-metrics -strict -out /tmp/build_metrics.csv
-```
-
-## Campos registrados (schema)
+### Campos registrados (schema)
 
 O objeto gravado segue o struct `metrics.BuildMetric`:
 
@@ -109,84 +134,54 @@ O objeto gravado segue o struct `metrics.BuildMetric`:
 - `project` (nome do projeto git ou `"unknown"`)
 - `branch` (ou `"unknown"`)
 - `commit` (hash curto, ou `"unknown"`)
-- `command` (representação do array de args)
+- `command`
 - `duration_sec`
 - `returncode`
 - `cpus`
 - `status` (`success`/`failure`)
 
-## Observações importantes
+## Estrutura do projeto
 
-- Falhas ao gravar métricas **não interrompem** o comando (apenas logam em `stderr`). Veja `metrics.Save`.
-- O comando executado herda `stdin/stdout/stderr` para manter interatividade e cores. Veja `runner.Run`.
-- Se o binário `git` não estiver disponível ou você não estiver em um repositório Git, branch/commit ficam como `"unknown"`. Veja `git.GetInfo`.
+- `cmd/measure-build/main.go`: coleta e grava métricas.
+- `cmd/analyze-metrics/main.go`: relatório semanal.
+- `cmd/export-metrics/main.go`: export JSONL → CSV.
+- `internal/runner/exec.go`: executor do comando e medição de duração (`runner.Run`).
+- `internal/git/info.go`: coleta branch/commit (`git.GetInfo`).
+- `internal/metrics/*`: modelo, persistência, paths e utilitários.
 
----
+## Desenvolvimento
 
-## Dicas rápidas de Go (build e desenvolvimento)
+Checagens comuns:
 
-- **Baixar/validar deps**:
+```bash
+gofmt -w .
+go test ./...
+go vet ./...
+```
 
-	```bash
-	go mod tidy
-	```
+Baixar/validar deps:
 
-- **Build reprodutível (sem cache de paths)**:
+```bash
+go mod tidy
+```
 
-	```bash
-	go build -trimpath ./cmd/measure-build
-	```
+Build reprodutível:
 
-- **Build com `Makefile`**:
+```bash
+go build -trimpath ./cmd/measure-build
+```
 
-	Este repositório contém um `Makefile` que prepara e compila os binários em `./dist`. Os alvos principais são:
+Cross-compile (exemplo):
 
-	- `make` — prepara e compila os binários (padrão `all`).
-	- `make build` — compila os binários e os coloca em `./dist`.
-	- `make clean` — remove a pasta `dist`.
-	- `make run ARGS="..."` — compila e executa o `build-meter` com os `ARGS` fornecidos.
+```bash
+GOOS=linux GOARCH=amd64 go build -o build-meter_linux_amd64 ./cmd/measure-build
+```
 
-	Exemplo de uso:
-
-	```bash
-	# compila tudo
-	make
-	```
-
-- **Instalar no `$GOBIN`/`$GOPATH/bin`**:
-
-	```bash
-	go install ./cmd/measure-build
-	```
-
-	Depois:
-
-	```bash
-	measure-build go test ./...
-	```
-
-- **Cross-compile**:
-
-	```bash
-	GOOS=linux GOARCH=amd64 go build -o measure-build_linux_amd64 ./cmd/measure-build
-	```
-
-- **Checagens comuns antes de commitar**:
-
-	```bash
-	gofmt -w .
-	go test ./...
-	go vet ./...
-	```
-
----
-
-## Links: melhores práticas (Go)
+## Links
 
 - Effective Go: https://go.dev/doc/effective_go
 - Go Code Review Comments: https://github.com/golang/go/wiki/CodeReviewComments
-- Standard Go Project Layout (referência comum): https://github.com/golang-standards/project-layout
-- Go Blog (boas práticas e novidades): https://go.dev/blog/
+- Go Blog: https://go.dev/blog/
 - `gofmt`: https://pkg.go.dev/cmd/gofmt
 - `go vet`: https://pkg.go.dev/cmd/vet
 - Go Modules Reference: https://go.dev/ref/mod

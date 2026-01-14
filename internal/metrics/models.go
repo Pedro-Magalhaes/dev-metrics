@@ -15,3 +15,9 @@ type BuildMetric struct {
 	CPUs        int     `json:"cpus"`
 	Status      string  `json:"status"`
 }
+
+// WeeklyStats armazena estatísticas agregadas por semana
+type WeeklyStats struct {
+	TotalDuration float64
+	Count         int
+}

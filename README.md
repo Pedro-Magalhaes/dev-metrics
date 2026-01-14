@@ -1,223 +1,229 @@
+# BMT - Build Metric Tool 🚀
 
-# dev-metrics
+O **BMT** é uma ferramenta unificada escrita em Go, projetada para **medir a duração de comandos** (como builds de C++, testes ou lints), armazenar essas métricas localmente em formato **JSON Lines** (`.jsonl`) e gerar relatórios de produtividade.
 
-Ferramenta em Go para **medir a duração de um comando** (ex.: build, testes, lint) e **registrar métricas** localmente em formato **JSON Lines** (`.jsonl`).
+Diferente de ferramentas complexas de CI, o BMT foca no desenvolvedor, permitindo entender quanto tempo você gasta "esperando o código compilar" no seu dia a dia.
 
-O fluxo é simples:
+---
 
-1) `measure-build` executa um comando e registra uma métrica em JSONL.
-2) `analyze-metrics` analisa o arquivo JSONL e imprime um relatório semanal.
-3) `export-metrics` converte o JSONL para CSV.
+## ⚡ Quickstart
 
-## Quickstart
-
-Compilar os binários em `./dist`:
+### 1. Compilar o binário unificado:
 
 ```bash
 make build
+
 ```
 
-Medir um comando (vai gerar/atualizar o log local):
+### 2. Medir um comando:
+
+O uso do `--` garante que as flags do seu comando não se misturem com as do BMT.
 
 ```bash
-./dist/build-meter go test ./...
+./dist/bmt run -- go test ./...
+
 ```
 
-Exportar para CSV:
+### 3. Ver o relatório semanal agrupado por projeto:
 
 ```bash
-./dist/export-meter -out /tmp/build_metrics.csv
+./dist/bmt report
+
 ```
 
-## Instalação (Linux, sem sudo)
+---
 
-Este projeto instala **3 binários**: `build-meter`, `analyze-meter`, `export-meter`.
+## 🛠️ Instalação (Linux)
 
-### Opção A: compilar e instalar localmente (recomendado para dev)
+O BMT é distribuído como um binário único, facilitando a gestão.
 
-Instala em `~/.local/bin` (padrão):
+### Opção A: Via Script de Instalação (Recomendado)
 
-```bash
-make install
-```
-
-Garanta que `~/.local/bin` esteja no seu `PATH` (bash/zsh):
-
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-```
-
-Dica: para imprimir a linha acima:
-
-```bash
-make path-hint
-```
-
-### Opção B: instalar via GitHub Releases (sem Go instalado)
-
-Instala a **última release** publicada do GitHub em `~/.local/bin`:
+Instala a versão mais recente em `~/.local/bin` automaticamente:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Pedro-Magalhaes/dev-metrics/main/scripts/install.sh | sh
+
 ```
 
-Para instalar uma versão específica:
+### Opção B: Compilação Local
+
+Se você tem o ambiente Go configurado (1.25+):
 
 ```bash
-VERSION=v1.2.3 curl -fsSL https://raw.githubusercontent.com/Pedro-Magalhaes/dev-metrics/main/scripts/install.sh | sh
+make install
+
 ```
 
-Requisitos do instalador: `curl` (ou `wget`), `tar`, `sha256sum`.
+*Isso copiará o binário para `~/.local/bin`.*
 
-## Comandos
+---
 
-### `measure-build` (binário: `build-meter`)
+## 📖 Subcomandos
 
-Executa o comando informado, mede a duração e salva uma linha JSON no log.
+O BMT utiliza uma estrutura de subcomandos intuitiva:
 
-Exemplos:
+| Comando | Descrição |
+| --- | --- |
+| **`run`** | Executa um comando e registra a duração no log. |
+| **`report`** | Analisa o log e exibe estatísticas semanais por projeto. |
+| **`export`** | Converte os logs JSONL para CSV. |
+| **`config`** | Gerencia as preferências locais (ex: caminho do log). |
+| **`info`** | Exibe versão, commit, build date e o log em uso. |
 
-```bash
-./dist/build-meter go build ./...
-./dist/build-meter go test ./...
-./dist/build-meter make build
-```
+---
 
-Flags úteis:
+## ⚙️ Configuração e Prioridade
 
-- `-log <path>`: sobrescreve o caminho do arquivo de log.
+O BMT agora suporta persistência de configuração. O caminho do arquivo de log é resolvido na seguinte ordem de prioridade:
 
-### `analyze-metrics` (binário: `analyze-meter`)
+1. **Flag**: `bmt run --log /path/to/log.jsonl -- ...`
+2. **Config**: Definido via `bmt config set log-path <path>`
+3. **Ambiente**: Variável `BUILD_METRICS_LOG`
+4. **Padrão**: `~/.local/share/build-metrics/build_log.jsonl`
 
-Analisa o log JSONL e imprime um relatório agrupado por semana (ISO 8601).
+> **Dica:** Use `bmt info` para verificar qual arquivo de log está sendo lido no momento.
 
-```bash
-./dist/analyze-meter
-./dist/analyze-meter -log /tmp/build_log.jsonl
-```
+---
 
-### `export-metrics` (binário: `export-meter`)
-
-Converte o log JSONL para CSV.
-
-- Escreve **CSV válido em stdout** (ou em arquivo com `-out`).
-- Escreve mensagens de status em `stderr`.
-
-Executar via binário:
-
-```bash
-./dist/export-meter -out -
-./dist/export-meter -out /tmp/build_metrics.csv
-./dist/export-meter -log /tmp/build_log.jsonl -out /tmp/build_metrics.csv
-./dist/export-meter -strict -out /tmp/build_metrics.csv
-```
-
-Executar via `go run`:
-
-```bash
-go run ./cmd/export-metrics -out -
-go run ./cmd/export-metrics -out /tmp/build_metrics.csv
-```
-
-Ajuda (flags disponíveis):
-
-```bash
-./dist/export-meter -h
-```
-
-Observações:
-
-- O CSV sempre inclui a primeira linha com o header (nomes das colunas).
-- Por padrão, linhas inválidas no JSONL são ignoradas; use `-strict` para falhar ao primeiro erro.
-- Para capturar somente o CSV (sem mensagens em `stderr`): `... 2>/dev/null`.
-
-## Log: local e configuração
-
-Por padrão as métricas são gravadas em:
-
-- `~/.local/share/build-metrics/build_log.jsonl`
-
-Cada execução adiciona **uma linha** (JSON) ao arquivo.
-
-Você pode sobrescrever o caminho do arquivo de log nesta ordem:
-
-1. Flag da CLI `-log <path>`
-2. Variável de ambiente `BUILD_METRICS_LOG`
-3. Padrão `~/.local/share/build-metrics/build_log.jsonl`
-
-Exemplos:
-
-```bash
-./dist/build-meter -log /tmp/build_log.jsonl make build
-export BUILD_METRICS_LOG=/tmp/build_log.jsonl
-./dist/analyze-meter
-```
-
-## Formatos e schema
-
-### JSONL
-
-O arquivo de log é JSON Lines (`.jsonl`): uma linha JSON por execução.
-
-### CSV
-
-O export usa um header fixo e gera uma linha por métrica.
+## 📊 Estrutura de Dados (Schema)
 
 ### Campos registrados (schema)
 
-O objeto gravado segue o struct `metrics.BuildMetric`:
+O objeto gravado segue :
 
-- `timestamp` (RFC3339)
-- `user`
-- `hostname`
+
+
+Cada execução gera um objeto JSON com os seguintes campos definido no struct `metrics.BuildMetric` :
+
+- `timestamp`: Data/hora da execução (RFC3339).
+- `user`: Usuário linux que executou o comando
+- `hostname`: hostname da máquina atual
 - `os` (ex.: `linux`, `darwin`, `windows`)
-- `project` (nome do projeto git ou `"unknown"`)
-- `branch` (ou `"unknown"`)
-- `commit` (hash curto, ou `"unknown"`)
-- `command`
-- `duration_sec`
-- `returncode`
-- `cpus`
-- `status` (`success`/`failure`)
+- `project`: Nome da pasta raiz do projeto Git ou `"unknown"`
+- `branch`: Branch atual no momento da execução ou `"unknown"`
+- `commit` hash curto do commit do momento da execução ou `"unknown"`
+- `duration_sec`: Tempo total de execução em segundos.
+- `returncode`: Código retornado pelo comando executado
+- `cpus`: Número de cpus da máquina
+- `status`: `success` ou `failure` baseado no exit code.
+- `command`: O comando exato que foi executado.
 
-## Estrutura do projeto
+---
 
-- `cmd/measure-build/main.go`: coleta e grava métricas.
-- `cmd/analyze-metrics/main.go`: relatório semanal.
-- `cmd/export-metrics/main.go`: export JSONL → CSV.
-- `internal/runner/exec.go`: executor do comando e medição de duração (`runner.Run`).
-- `internal/git/info.go`: coleta branch/commit (`git.GetInfo`).
-- `internal/metrics/*`: modelo, persistência, paths e utilitários.
+## 🏗️ Estrutura do Projeto
 
-## Desenvolvimento
+A aplicação utiliza um **Padrão de Registro Dinâmico**, facilitando a adição de novos comandos sem alterar o núcleo do sistema:
 
-Checagens comuns:
+* `cmd/bmt/main.go`: Ponto de entrada e roteador de subcomandos.
+* `internal/commands/`: Implementação de cada subcomando (`run.go`, `report.go`, etc.).
+* `internal/metrics/`: Lógica de persistência, modelos e configurações.
+* `internal/git/`: Utilitários para extração de contexto do repositório.
+
+---
+
+Essa é uma excelente ideia. Adicionar exemplos práticos no `README.md` transforma a ferramenta de "apenas um binário" em uma **solução de fluxo de trabalho**. O objetivo aqui é mostrar como o `bmt` pode ser "invisível" no dia a dia, coletando dados sem que o desenvolvedor precise se lembrar de executá-lo.
+
+Aqui está a nova seção de **Exemplos de Uso Avançado** para você copiar e colar no final do seu arquivo:
+
+---
+
+## 🚀 Exemplos de Uso Avançados by 🤖
+
+Abaixo estão algumas formas de integrar o `bmt` profundamente no seu workflow para extrair o máximo de valor dos seus dados.
+
+### 1. "Invisibilidade": Aliases Automáticos
+
+Em vez de digitar `bmt run --` todas as vezes, você pode criar um alias no seu `~/.zshrc` ou `~/.bashrc` para que comandos pesados sejam medidos automaticamente.
 
 ```bash
+# Medir automaticamente qualquer execução de 'make'
+alias make='bmt run -- make'
+
+# Medir builds de CMake
+alias cbuild='bmt run -- cmake --build build'
+
+# Medir instalação de dependências
+alias npm-install='bmt run -- npm install'
+
+```
+
+*Agora, toda vez que você rodar `make`, o BMT registrará a duração silenciosamente no fundo.*
+
+### 2. Integração com `jq` para Consultas Customizadas
+
+Como o BMT armazena dados em JSONL, você pode usar o [jq](https://jqlang.github.io/jq/) para fazer perguntas complexas aos seus logs:
+
+**Qual foi o build mais longo do último mês?**
+
+```bash
+cat ~/.local/share/build-metrics/build_log.jsonl | jq -s 'sort_by(.duration_sec) | last'
+
+```
+
+**Quanto tempo total (em minutos) eu gastei em builds hoje?**
+
+```bash
+cat build_log.jsonl | jq -r 'select(.timestamp | startswith("2024-05-20")) | .duration_sec' | awk '{s+=$1} END {print s/60 " min"}'
+
+```
+
+### 3. Workflow de Integração Contínua (CI)
+
+Você pode usar o BMT no seu CI para monitorar se novos commits estão deixando o build mais lento em comparação com a média dos desenvolvedores:
+
+```yaml
+- name: Measure Build in CI
+  run: |
+    bmt run --log ci_stats.jsonl -- make build
+    # Opcional: Enviar ci_stats.jsonl para um dashboard central
+
+```
+
+### 4. Análise Visual via CSV
+
+Se você prefere gráficos, pode exportar os dados e abri-los diretamente no Excel, Google Sheets ou até no Python (Pandas):
+
+```bash
+bmt export -out metrics.csv
+# No Linux, você pode abrir direto (se tiver o LibreOffice instalado):
+libreoffice --calc metrics.csv
+
+```
+
+---
+
+### 💡 Dica de Ouro: Notificação após builds longos
+
+Você pode combinar o BMT com notificações do sistema para ser avisado quando um build demorado finalmente terminar:
+
+```bash
+alias slow-build='bmt run -- make build && notify-send "Build Finalizado" "O processo levou $(bmt report | tail -n 1 | awk "{print \$NF}") segundos"'
+
+```
+
+---
+
+## 👨‍💻 Desenvolvimento
+
+Para contribuir ou realizar modificações:
+
+```bash
+# Formatar código
 gofmt -w .
-go test ./...
+
+# Rodar verificações
 go vet ./...
+
+# Rodar testes
+go test ./...
+
+# Gerar build com metadados de versão
+make build
+
 ```
 
-Baixar/validar deps:
-
-```bash
-go mod tidy
-```
-
-Build reprodutível:
-
-```bash
-go build -trimpath ./cmd/measure-build
-```
-
-Cross-compile (exemplo):
-
-```bash
-GOOS=linux GOARCH=amd64 go build -o build-meter_linux_amd64 ./cmd/measure-build
-```
-
-## Links
+### Links úteis
 
 - Effective Go: https://go.dev/doc/effective_go
 - Go Code Review Comments: https://github.com/golang/go/wiki/CodeReviewComments
@@ -225,4 +231,3 @@ GOOS=linux GOARCH=amd64 go build -o build-meter_linux_amd64 ./cmd/measure-build
 - `gofmt`: https://pkg.go.dev/cmd/gofmt
 - `go vet`: https://pkg.go.dev/cmd/vet
 - Go Modules Reference: https://go.dev/ref/mod
-

@@ -9,9 +9,7 @@ INSTALLBINDIR ?= $(PREFIX)/bin
 INSTALL ?= install
 
 # Nomes dos binários
-BUILD_METER := build-meter
-ANALYZE_METER := analyze-meter
-EXPORT_METER := export-meter
+BMT := bmt
 
 # Captura informações do ambiente
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -36,14 +34,9 @@ setup:
 
 # Compila os dois binários
 build: setup
-	@echo "Compilando $(BUILD_METER)..."
-	go build -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/$(BUILD_METER) $(CMD_DIR)/measure-build
+	@echo "Compilando $(BMT)..."
+	go build -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/$(BMT) $(CMD_DIR)/$(BMT)
 	
-	@echo "Compilando $(ANALYZE_METER)..."
-	go build -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/$(ANALYZE_METER) $(CMD_DIR)/analyze-metrics
-	
-	@echo "Compilando $(EXPORT_METER)..."
-	go build -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/$(EXPORT_METER) $(CMD_DIR)/export-metrics
 	@echo "Build concluído! Binários disponíveis em ./$(BINARY_DIR)"
 
 # Remove a pasta dist
@@ -55,22 +48,20 @@ clean:
 # Atalho para rodar o build-meter (exemplo)
 # Use como: make run ARGS="cmake --version"
 run: build
-	./$(BINARY_DIR)/$(BUILD_METER) $(ARGS)
+	./$(BINARY_DIR)/$(BMT) $(ARGS)
 
 install: build
 	@echo "Instalando binários em $(INSTALLBINDIR)"
 	@mkdir -p "$(INSTALLBINDIR)"
-	@$(INSTALL) -m 0755 "$(BINARY_DIR)/$(BUILD_METER)" "$(INSTALLBINDIR)/$(BUILD_METER)"
-	@$(INSTALL) -m 0755 "$(BINARY_DIR)/$(ANALYZE_METER)" "$(INSTALLBINDIR)/$(ANALYZE_METER)"
-	@$(INSTALL) -m 0755 "$(BINARY_DIR)/$(EXPORT_METER)" "$(INSTALLBINDIR)/$(EXPORT_METER)"
-	@echo "OK: $(BUILD_METER), $(ANALYZE_METER), $(EXPORT_METER) instalados"
+	@$(INSTALL) -m 0755 "$(BINARY_DIR)/$(BMT)" "$(INSTALLBINDIR)/$(BMT)"
+	@echo "OK: $(BMT), instalados em $(INSTALLBINDIR)"
 	@$(MAKE) --no-print-directory path-hint
 
 uninstall:
 	@echo "Removendo binários de $(INSTALLBINDIR)"
-	@rm -f "$(INSTALLBINDIR)/$(BUILD_METER)" "$(INSTALLBINDIR)/$(ANALYZE_METER)" "$(INSTALLBINDIR)/$(EXPORT_METER)"
+	@rm -f "$(INSTALLBINDIR)/$(BMT)"
 	@echo "OK: removido"
 
 path-hint:
 	@echo "Adicione ao seu shell rc (bash/zsh):"
-	@echo "  export PATH=\"$$HOME/.local/bin:$$PATH\""
+	@echo "  export PATH=\"$(INSTALLBINDIR):\$$PATH\""

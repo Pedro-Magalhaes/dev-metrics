@@ -3,7 +3,7 @@ set -eu
 
 REPO_DEFAULT="Pedro-Magalhaes/dev-metrics"
 REPO="${REPO:-$REPO_DEFAULT}"
-BINDIR="${BINDIR:-${HOME}/.local/bin}"
+BIN_DIR="${BIN_DIR:-${HOME}/.local/bin}"
 VERSION="${VERSION:-latest}"
 BIN_NAME="bmt"
 
@@ -73,7 +73,7 @@ WORKDIR="$(mktemp -d)"
 cleanup() { rm -rf "$WORKDIR"; }
 trap cleanup EXIT INT TERM
 
-mkdir -p "$BINDIR"
+mkdir -p "$BIN_DIR"
 
 # 1. Download e Verificação de Checksums
 CHECKSUMS="checksums_${TAG}.txt"
@@ -111,24 +111,24 @@ GOT="$(sha256_file "$ASSET_PATH")"
 [ "$GOT" = "$EXP" ] || fail "falha na verificação de checksum: esperado $EXP, obtido $GOT"
 
 # 4. Extração e Instalação
-printf "🚀 Instalando %s em %s...\n" "$BIN_NAME" "$BINDIR" >&2
+printf "🚀 Instalando %s em %s...\n" "$BIN_NAME" "$BIN_DIR" >&2
 tar -xzf "$ASSET_PATH" -C "$WORKDIR"
 [ -f "${WORKDIR}/${BIN_NAME}" ] || fail "binário '${BIN_NAME}' não encontrado dentro do pacote"
 
 if command -v install >/dev/null 2>&1; then
-  install -m 0755 "${WORKDIR}/${BIN_NAME}" "${BINDIR}/${BIN_NAME}"
+  install -m 0755 "${WORKDIR}/${BIN_NAME}" "${BIN_DIR}/${BIN_NAME}"
 else
-  cp "${WORKDIR}/${BIN_NAME}" "${BINDIR}/${BIN_NAME}"
-  chmod 0755 "${BINDIR}/${BIN_NAME}"
+  cp "${WORKDIR}/${BIN_NAME}" "${BIN_DIR}/${BIN_NAME}"
+  chmod 0755 "${BIN_DIR}/${BIN_NAME}"
 fi
 
 # 5. Feedback Final
 printf "\n✅ %s instalado com sucesso!\n" "$BIN_NAME" >&2
 
-if ! printf "%s" "$PATH" | grep -q "$BINDIR"; then
-  printf "\n⚠️  Atenção: %s não está no seu PATH.\n" "$BINDIR" >&2
+if ! printf "%s" "$PATH" | grep -q "$BIN_DIR"; then
+  printf "\n⚠️  Atenção: %s não está no seu PATH.\n" "$BIN_DIR" >&2
   printf "Adicione a seguinte linha ao seu ~/.bashrc ou ~/.zshrc:\n" >&2
-  printf "  export PATH=\"%s:\$PATH\"\n" "$BINDIR" >&2
+  printf "  export PATH=\"%s:\$PATH\"\n" "$BIN_DIR" >&2
 fi
 
 printf "\nExperimente rodar: %s info\n" "$BIN_NAME info" >&2

@@ -1,17 +1,15 @@
 # Variáveis
-BINARY_DIR := dist
+REPO_BIN_DIR := dist
 CMD_DIR := ./cmd
 INTERNAL_PKG := dev-metrics/internal/metrics
 
 # Instalação (sem sudo)
 PREFIX ?= $(HOME)/.local
-INSTALLBINDIR ?= $(PREFIX)/bin
+BIN_DIR ?= $(PREFIX)/bin
 INSTALL ?= install
 
 # Nomes dos binários
-BUILD_METER := build-meter
-ANALYZE_METER := analyze-meter
-EXPORT_METER := export-meter
+BMT := bmt
 
 # Captura informações do ambiente
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
@@ -32,45 +30,38 @@ all: setup build
 
 # Cria a pasta dist se não existir
 setup:
-	@mkdir -p $(BINARY_DIR)
+	@mkdir -p $(REPO_BIN_DIR)
 
 # Compila os dois binários
 build: setup
-	@echo "Compilando $(BUILD_METER)..."
-	go build -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/$(BUILD_METER) $(CMD_DIR)/measure-build
+	@echo "Compilando $(BMT)..."
+	go build -ldflags="$(LDFLAGS)" -o $(REPO_BIN_DIR)/$(BMT) $(CMD_DIR)/$(BMT)
 	
-	@echo "Compilando $(ANALYZE_METER)..."
-	go build -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/$(ANALYZE_METER) $(CMD_DIR)/analyze-metrics
-	
-	@echo "Compilando $(EXPORT_METER)..."
-	go build -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/$(EXPORT_METER) $(CMD_DIR)/export-metrics
-	@echo "Build concluído! Binários disponíveis em ./$(BINARY_DIR)"
+	@echo "Build concluído! Binários disponíveis em ./$(REPO_BIN_DIR)"
 
 # Remove a pasta dist
 clean:
 	@echo "Limpando arquivos..."
-	rm -rf $(BINARY_DIR)
-	@echo "Pasta $(BINARY_DIR) removida."
+	rm -rf $(REPO_BIN_DIR)
+	@echo "Pasta $(REPO_BIN_DIR) removida."
 
 # Atalho para rodar o build-meter (exemplo)
 # Use como: make run ARGS="cmake --version"
 run: build
-	./$(BINARY_DIR)/$(BUILD_METER) $(ARGS)
+	./$(REPO_BIN_DIR)/$(BMT) $(ARGS)
 
 install: build
-	@echo "Instalando binários em $(INSTALLBINDIR)"
-	@mkdir -p "$(INSTALLBINDIR)"
-	@$(INSTALL) -m 0755 "$(BINARY_DIR)/$(BUILD_METER)" "$(INSTALLBINDIR)/$(BUILD_METER)"
-	@$(INSTALL) -m 0755 "$(BINARY_DIR)/$(ANALYZE_METER)" "$(INSTALLBINDIR)/$(ANALYZE_METER)"
-	@$(INSTALL) -m 0755 "$(BINARY_DIR)/$(EXPORT_METER)" "$(INSTALLBINDIR)/$(EXPORT_METER)"
-	@echo "OK: $(BUILD_METER), $(ANALYZE_METER), $(EXPORT_METER) instalados"
+	@echo "Instalando binários em $(BIN_DIR)"
+	@mkdir -p "$(BIN_DIR)"
+	@$(INSTALL) -m 0755 "$(REPO_BIN_DIR)/$(BMT)" "$(BIN_DIR)/$(BMT)"
+	@echo "OK: $(BMT), instalados em $(BIN_DIR)"
 	@$(MAKE) --no-print-directory path-hint
 
 uninstall:
-	@echo "Removendo binários de $(INSTALLBINDIR)"
-	@rm -f "$(INSTALLBINDIR)/$(BUILD_METER)" "$(INSTALLBINDIR)/$(ANALYZE_METER)" "$(INSTALLBINDIR)/$(EXPORT_METER)"
+	@echo "Removendo binários de $(BIN_DIR)"
+	@rm -f "$(BIN_DIR)/$(BMT)"
 	@echo "OK: removido"
 
 path-hint:
 	@echo "Adicione ao seu shell rc (bash/zsh):"
-	@echo "  export PATH=\"$$HOME/.local/bin:$$PATH\""
+	@echo "  export PATH=\"$(BIN_DIR):\$$PATH\""

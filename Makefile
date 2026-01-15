@@ -1,11 +1,11 @@
 # Variáveis
-BINARY_DIR := dist
+REPO_BIN_DIR := dist
 CMD_DIR := ./cmd
 INTERNAL_PKG := dev-metrics/internal/metrics
 
 # Instalação (sem sudo)
 PREFIX ?= $(HOME)/.local
-INSTALLBINDIR ?= $(PREFIX)/bin
+BIN_DIR ?= $(PREFIX)/bin
 INSTALL ?= install
 
 # Nomes dos binários
@@ -30,38 +30,38 @@ all: setup build
 
 # Cria a pasta dist se não existir
 setup:
-	@mkdir -p $(BINARY_DIR)
+	@mkdir -p $(REPO_BIN_DIR)
 
 # Compila os dois binários
 build: setup
 	@echo "Compilando $(BMT)..."
-	go build -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/$(BMT) $(CMD_DIR)/$(BMT)
+	go build -ldflags="$(LDFLAGS)" -o $(REPO_BIN_DIR)/$(BMT) $(CMD_DIR)/$(BMT)
 	
-	@echo "Build concluído! Binários disponíveis em ./$(BINARY_DIR)"
+	@echo "Build concluído! Binários disponíveis em ./$(REPO_BIN_DIR)"
 
 # Remove a pasta dist
 clean:
 	@echo "Limpando arquivos..."
-	rm -rf $(BINARY_DIR)
-	@echo "Pasta $(BINARY_DIR) removida."
+	rm -rf $(REPO_BIN_DIR)
+	@echo "Pasta $(REPO_BIN_DIR) removida."
 
 # Atalho para rodar o build-meter (exemplo)
 # Use como: make run ARGS="cmake --version"
 run: build
-	./$(BINARY_DIR)/$(BMT) $(ARGS)
+	./$(REPO_BIN_DIR)/$(BMT) $(ARGS)
 
 install: build
-	@echo "Instalando binários em $(INSTALLBINDIR)"
-	@mkdir -p "$(INSTALLBINDIR)"
-	@$(INSTALL) -m 0755 "$(BINARY_DIR)/$(BMT)" "$(INSTALLBINDIR)/$(BMT)"
-	@echo "OK: $(BMT), instalados em $(INSTALLBINDIR)"
+	@echo "Instalando binários em $(BIN_DIR)"
+	@mkdir -p "$(BIN_DIR)"
+	@$(INSTALL) -m 0755 "$(REPO_BIN_DIR)/$(BMT)" "$(BIN_DIR)/$(BMT)"
+	@echo "OK: $(BMT), instalados em $(BIN_DIR)"
 	@$(MAKE) --no-print-directory path-hint
 
 uninstall:
-	@echo "Removendo binários de $(INSTALLBINDIR)"
-	@rm -f "$(INSTALLBINDIR)/$(BMT)"
+	@echo "Removendo binários de $(BIN_DIR)"
+	@rm -f "$(BIN_DIR)/$(BMT)"
 	@echo "OK: removido"
 
 path-hint:
 	@echo "Adicione ao seu shell rc (bash/zsh):"
-	@echo "  export PATH=\"$(INSTALLBINDIR):\$$PATH\""
+	@echo "  export PATH=\"$(BIN_DIR):\$$PATH\""

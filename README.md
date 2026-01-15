@@ -46,6 +46,12 @@ curl -fsSL https://raw.githubusercontent.com/Pedro-Magalhaes/dev-metrics/main/sc
 
 ```
 
+Para instalar em um diretório personalizado, defina a variável BIN_DIR:
+```bash
+BIN_DIR=/caminho/customizado/bin curl -fsSL https://raw.githubusercontent.com/Pedro-Magalhaes/dev-metrics/main/scripts/install.sh | sh
+
+```
+
 ### Opção B: Compilação Local
 
 Se você tem o ambiente Go configurado (1.25+):
@@ -56,6 +62,14 @@ make install
 ```
 
 *Isso copiará o binário para `~/.local/bin`.*
+
+Também é possível passar um caminho customizado para a instalação do binário:
+
+```
+make install BIN_DIR=/caminho/customizado/bin
+
+
+```
 
 ---
 

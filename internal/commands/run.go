@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"dev-metrics/internal/git"
 	metrics "dev-metrics/internal/metrics"
 	"dev-metrics/internal/runner"
@@ -8,8 +9,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"os/user"
 	"runtime"
+	"syscall"
 	"time"
 )
 
@@ -43,7 +46,19 @@ func (c *ExecCommand) Run(args []string) error {
 		return errors.New(fmt.Sprint("erro ao resolver caminho do log:", err))
 	}
 
-	duration, exitCode := runner.Run(cmdArgs)
+	// Cria um context que pode ser cancelado
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Captura SIGINT (Ctrl+C) e cancela o contexto
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT)
+	go func() {
+		<-sigChan
+		cancel()
+	}()
+
+	duration, exitCode := runner.Run(ctx, cmdArgs)
 
 	// 2. Coleta metadados
 	currUser, _ := user.Current()
@@ -53,6 +68,11 @@ func (c *ExecCommand) Run(args []string) error {
 	status := "success"
 	if exitCode != 0 {
 		status = "failure"
+	}
+
+	// Verifica se foi interrompido (contexto cancelado)
+	if ctx.Err() == context.Canceled {
+		status = "interrupted"
 	}
 
 	// 3. Monta a métrica

@@ -120,7 +120,7 @@ Cada execução gera um objeto JSON com os seguintes campos definido no struct `
 - `duration_sec`: Tempo total de execução em segundos.
 - `returncode`: Código retornado pelo comando executado
 - `cpus`: Número de cpus da máquina
-- `status`: `success` ou `failure` baseado no exit code.
+- `status`: `success`, `failure` baseado no exit code ou `interrupted`.
 - `command`: O comando exato que foi executado.
 
 ---

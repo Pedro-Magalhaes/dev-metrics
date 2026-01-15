@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -8,12 +9,12 @@ import (
 )
 
 // Run executa o comando e retorna a duração em segundos e o código de saída
-func Run(args []string) (float64, int) {
+func Run(ctx context.Context, args []string) (float64, int) {
 	if len(args) == 0 {
 		return 0, 1
 	}
 
-	cmd := exec.Command(args[0], args[1:]...)
+	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 
 	// Conecta pipes para manter cores e interatividade
 	cmd.Stdout = os.Stdout

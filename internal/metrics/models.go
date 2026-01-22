@@ -16,8 +16,30 @@ type BuildMetric struct {
 	Status      string  `json:"status"`
 }
 
-// WeeklyStats armazena estatísticas agregadas por semana
-type WeeklyStats struct {
+// BuildStats armazena estatísticas agregadas por semana
+type BuildStats struct {
 	TotalDuration float64
 	Count         int
+}
+
+// WeeklySummary representa uma linha da tabela do report (uma semana)
+type WeeklySummary struct {
+	WeekLabel   string  // ex: "2024-W32"
+	AvgDuration float64 // Segundos
+	BuildStats
+}
+
+// ProjectSummary representa um bloco de tabela do report (um projeto)
+type ProjectSummary struct {
+	Name          string
+	Weeks         []WeeklySummary // Ordenar por semana
+	TotalDuration float64
+	TotalBuilds   int
+}
+
+// FullReport contém todos os dados prontos para exibição
+type FullReport struct {
+	Projects       []ProjectSummary // Ordenar alfabeticamente
+	GlobalDuration float64
+	GlobalBuilds   int
 }

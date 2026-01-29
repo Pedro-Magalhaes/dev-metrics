@@ -27,7 +27,9 @@ func (c *ExportCommand) Run(args []string) error {
 		fs.PrintDefaults()
 		metrics.PrintResolvedLogPath(fs.Output(), "Arquivo de log: ", fs.Lookup("log").Value.String())
 	}
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	logPath, err := metrics.GetLogFilePath(*logOverride)
 	if err != nil {

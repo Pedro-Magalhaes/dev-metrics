@@ -13,8 +13,15 @@ type reportKey struct {
 	Week    int
 }
 
+// ReportOptions define filtros e opções para geração do relatório
+type ReportOptions struct {
+	Since time.Time // Se zero, ignora
+	Until time.Time // Se zero, ignora
+}
+
 // GenerateReport processa o log e retorna os dados estruturados
-func GenerateReport(r io.Reader) (*FullReport, error) {
+// Agora aceita opções de filtro
+func GenerateReport(r io.Reader, opts ReportOptions) (*FullReport, error) {
 	// 1. Estruturas temporárias para acumulação (Mapas)
 	// Map: [Projeto - Semana - ano] -> Stats
 	tempData := make(map[reportKey]*BuildStats)
@@ -23,7 +30,15 @@ func GenerateReport(r io.Reader) (*FullReport, error) {
 	_, err := ScanJSONL(r, false, func(m BuildMetric) error {
 		t, err := time.Parse(time.RFC3339, m.Timestamp)
 		if err != nil {
-			return nil // Ignora erro de parse pontual ou retorna erro
+			return nil // Ignora erro de parse pontual
+		}
+
+		// Filtro de Data (--since / --until)
+		if !opts.Since.IsZero() && t.Before(opts.Since) {
+			return nil
+		}
+		if !opts.Until.IsZero() && t.After(opts.Until) {
+			return nil
 		}
 
 		year, week := t.ISOWeek()

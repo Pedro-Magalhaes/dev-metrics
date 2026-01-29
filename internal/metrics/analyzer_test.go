@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestGenerateReport(t *testing.T) {
@@ -12,6 +13,7 @@ func TestGenerateReport(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   string // Simula o conteúdo do arquivo JSONL
+		options ReportOptions
 		want    *FullReport
 		wantErr bool
 	}{
@@ -20,6 +22,39 @@ func TestGenerateReport(t *testing.T) {
 			input: `
 {"project": "backend", "timestamp": "2024-01-03T10:00:00Z", "duration_sec": 10}
 {"project": "backend", "timestamp": "2024-01-04T12:00:00Z", "duration_sec": 20}
+`,
+			// 2024-01-03 é Semana 01 de 2024
+			want: &FullReport{
+				Projects: []ProjectSummary{
+					{
+						Name:          "backend",
+						TotalDuration: 30,
+						TotalBuilds:   2,
+						Weeks: []WeeklySummary{
+							{
+								WeekLabel: "2024-W01",
+								BuildStats: BuildStats{
+									TotalDuration: 30,
+									Count:         2,
+								},
+								AvgDuration: 15, // (10+20)/2
+							},
+						},
+					},
+				},
+				GlobalDuration: 30,
+				GlobalBuilds:   2,
+			},
+			wantErr: false,
+		},
+		{
+			name:    "Basic Aggregation with until filter",
+			options: ReportOptions{Until: parseTime(t, "2024-01-04T00:00:00Z")},
+			input: `
+{"project": "backend", "timestamp": "2024-01-03T10:00:00Z", "duration_sec": 10}
+{"project": "backend", "timestamp": "2024-01-04T00:00:00Z", "duration_sec": 20}
+{"project": "backend", "timestamp": "2024-01-04T12:00:00Z", "duration_sec": 200}
+{"project": "backend", "timestamp": "2024-01-05T12:00:00Z", "duration_sec": 200}
 `,
 			// 2024-01-03 é Semana 01 de 2024
 			want: &FullReport{
@@ -162,7 +197,7 @@ func TestGenerateReport(t *testing.T) {
 			// Cria um Reader a partir da string de input
 			r := strings.NewReader(tt.input)
 
-			got, err := GenerateReport(r)
+			got, err := GenerateReport(r, tt.options)
 
 			// Verifica se o erro ocorreu conforme esperado
 			if (err != nil) != tt.wantErr {
@@ -199,8 +234,20 @@ func TestGenerateReportWithInvalidReader(t *testing.T) {
 	// Simula um reader que retorna erro
 	r := &errorReader{}
 
-	_, err := GenerateReport(r)
+	_, err := GenerateReport(r, ReportOptions{})
 	if err == nil {
 		t.Errorf("GenerateReport() expected error, got nil")
 	}
+}
+
+// Funções auxiliares de teste
+
+// transforma data em string para time.Time
+func parseTime(t *testing.T, timeStr string) time.Time {
+	t.Helper()
+	parsed, err := time.Parse(time.RFC3339, timeStr)
+	if err != nil {
+		t.Fatalf("failed to parse time %s: %v", timeStr, err)
+	}
+	return parsed
 }

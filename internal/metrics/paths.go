@@ -9,6 +9,10 @@ import (
 
 const EnvLogPath = "BUILD_METRICS_LOG"
 
+// Usando monkey patching simples para facilitar testes
+var EnvGetter = os.Getenv
+var HomeDirGetter = os.UserHomeDir
+
 // GetLogFilePath retorna o caminho final baseado na prioridade:
 // 1. override (se não for vazio)
 // 2. Variável de ambiente BUILD_METRICS_LOG
@@ -18,11 +22,11 @@ func GetLogFilePath(override string) (string, error) {
 		return override, nil
 	}
 
-	if envPath := os.Getenv(EnvLogPath); envPath != "" {
+	if envPath := EnvGetter(EnvLogPath); envPath != "" {
 		return envPath, nil
 	}
 
-	homeDir, err := os.UserHomeDir()
+	homeDir, err := HomeDirGetter()
 	if err != nil {
 		return "", err
 	}

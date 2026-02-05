@@ -6,31 +6,40 @@ import (
 	"io"
 )
 
-func RenderReportTable(w io.Writer, report *metrics.FullReport) {
+func RenderReportTable(w io.Writer, report *metrics.FullReport, totalUnit metrics.DurationUnit) {
+	avgHeader := "Média (auto)"
+	totalHeader := "Total"
+	if totalUnit != metrics.DurationAuto {
+		totalHeader = fmt.Sprintf("Total (%s)", metrics.DurationUnitLabel(totalUnit))
+	}
+
 	for _, proj := range report.Projects {
 		fmt.Fprintf(w, "\n%-12s : %-12s\n", "Projeto", proj.Name)
 		fmt.Fprintln(w, "====================================================")
-		fmt.Fprintf(w, "%-12s | %-12s | %-12s | %-10s\n", "Semana", "Total (min)", "Média (s)", "Builds")
+		fmt.Fprintf(w, "%-12s | %-12s | %-12s | %-10s\n", "Semana", totalHeader, avgHeader, "Builds")
 		fmt.Fprintln(w, "----------------------------------------------------")
 
 		for _, week := range proj.Weeks {
-			totalMin := week.TotalDuration / 60
-			fmt.Fprintf(w, "%-12s | %-12.2f | %-12.1f | %-10d\n",
-				week.WeekLabel, totalMin, week.AvgDuration, week.Count)
+			totalStr := metrics.FormatDuration(week.TotalDuration, totalUnit, totalUnit == metrics.DurationAuto)
+			avgStr := metrics.FormatDuration(week.AvgDuration, metrics.DurationAuto, true)
+			fmt.Fprintf(w, "%-12s | %-12s | %-12s | %-10d\n",
+				week.WeekLabel, totalStr, avgStr, week.Count)
 		}
 
 		fmt.Fprintln(w, "----------------------------------------------------")
-		fmt.Fprintf(w, "%-12s | %-12.2f | %-12s | %-10d\n",
-			"Total", proj.TotalDuration/60, "-", proj.TotalBuilds)
+		totalStr := metrics.FormatDuration(proj.TotalDuration, totalUnit, totalUnit == metrics.DurationAuto)
+		fmt.Fprintf(w, "%-12s | %-12s | %-12s | %-10d\n",
+			"Total", totalStr, "-", proj.TotalBuilds)
 		fmt.Fprintln(w, "====================================================")
 	}
 
 	// Resumo Global
 	fmt.Fprintf(w, "\nRelatório Geral: \n")
 	fmt.Fprintln(w, "====================================================")
-	fmt.Fprintf(w, "%-12s | %-12s | %-12s | %-12s\n", "", "Total (min)", "Média", "Builds")
+	fmt.Fprintf(w, "%-12s | %-12s | %-12s | %-12s\n", "", totalHeader, avgHeader, "Builds")
 	fmt.Fprintln(w, "----------------------------------------------------")
-	fmt.Fprintf(w, "%-12s | %-12.1f | %-12s | %-10d\n",
-		"", report.GlobalDuration/60, "-", report.GlobalBuilds)
+	globalTotalStr := metrics.FormatDuration(report.GlobalDuration, totalUnit, totalUnit == metrics.DurationAuto)
+	fmt.Fprintf(w, "%-12s | %-12s | %-12s | %-10d\n",
+		"", globalTotalStr, "-", report.GlobalBuilds)
 	fmt.Fprintln(w, "====================================================")
 }

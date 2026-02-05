@@ -2,4 +2,6 @@
 /bin/
 /dist/
 
-.vscode/    
+.vscode/
+coverage.txt
+coverage.html

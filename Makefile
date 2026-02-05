@@ -24,6 +24,7 @@ LDFLAGS := -X $(INTERNAL_PKG).Version=$(VERSION) \
            -s -w
 
 .PHONY: all build clean setup install uninstall path-hint
+.PHONY: all build clean setup install uninstall path-hint test coverage
 
 # Alvo padrão: limpa, prepara e compila tudo
 all: setup build
@@ -65,3 +66,17 @@ uninstall:
 path-hint:
 	@echo "Adicione ao seu shell rc (bash/zsh):"
 	@echo "  export PATH=\"$(BIN_DIR):\$$PATH\""
+
+# Test target: formatting, vet and run unit tests with coverage
+test:
+	@echo "Running formatting check, vet and tests..."
+	@gofmt -l . | ( read v && ( echo "gofmt needs to be run on above files"; exit 1 ) || true )
+	@go vet ./...
+	@go test -v -race -covermode=atomic -coverpkg=./... -coverprofile=coverage.txt ./...
+	@echo "Coverage written to coverage.txt"
+
+# Generate coverage HTML (depends on test)
+coverage: test
+	@echo "Generating coverage HTML..."
+	@go tool cover -html=coverage.txt -o coverage.html
+	@echo "coverage.html generated"

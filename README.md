@@ -31,6 +31,15 @@ O uso do `--` garante que as flags do seu comando não se misturem com as do BMT
 
 ```
 
+Você pode escolher a unidade dos totais:
+
+```bash
+./dist/bmt report --unit h
+./dist/bmt report --unit min
+./dist/bmt report --unit auto
+
+```
+
 ---
 
 ## 🛠️ Instalação (Linux)
@@ -82,19 +91,17 @@ O BMT utiliza uma estrutura de subcomandos intuitiva:
 | **`run`** | Executa um comando e registra a duração no log. |
 | **`report`** | Analisa o log e exibe estatísticas semanais por projeto. |
 | **`export`** | Converte os logs JSONL para CSV. |
-| **`config`** | Gerencia as preferências locais (ex: caminho do log). |
 | **`info`** | Exibe versão, commit, build date e o log em uso. |
 
 ---
 
 ## ⚙️ Configuração e Prioridade
 
-O BMT agora suporta persistência de configuração. O caminho do arquivo de log é resolvido na seguinte ordem de prioridade:
+O caminho do arquivo de log é resolvido na seguinte ordem de prioridade:
 
 1. **Flag**: `bmt run --log /path/to/log.jsonl -- ...`
-2. **Config**: Definido via `bmt config set log-path <path>`
-3. **Ambiente**: Variável `BUILD_METRICS_LOG`
-4. **Padrão**: `~/.local/share/build-metrics/build_log.jsonl`
+2. **Ambiente**: Variável `BUILD_METRICS_LOG`
+3. **Padrão**: `~/.local/share/build-metrics/build_log.jsonl`
 
 > **Dica:** Use `bmt info` para verificar qual arquivo de log está sendo lido no momento.
 

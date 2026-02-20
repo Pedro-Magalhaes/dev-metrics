@@ -1,7 +1,14 @@
-# BMT - Build Metric Tool 🚀
-  ![Build](https://github.com/Pedro-Magalhaes/dev-metrics/actions/workflows/build.yml/badge.svg)
-  ![CI](https://github.com/Pedro-Magalhaes/dev-metrics/actions/workflows/ci.yml/badge.svg)
-  [![codecov](https://codecov.io/gh/Pedro-Magalhaes/dev-metrics/branch/main/graph/badge.svg)](https://app.codecov.io/github/Pedro-Magalhaes/dev-metrics)
+# BMT - Build Metric Tool 
+<div align="left">
+  <img src="./assets/bmt_banner.png" alt="bmt - Build Metrics Tool Logo" width="400" />
+  
+  <img src="https://github.com/Pedro-Magalhaes/dev-metrics/actions/workflows/build.yml/badge.svg" alt="Build">
+  <img src="https://github.com/Pedro-Magalhaes/dev-metrics/actions/workflows/ci.yml/badge.svg" alt="Tests">
+  <a href="https://app.codecov.io/github/Pedro-Magalhaes/dev-metrics"><img src="https://codecov.io/gh/Pedro-Magalhaes/dev-metrics/branch/main/graph/badge.svg" alt="Codecov"></a>
+  <a href="https://github.com/Pedro-Magalhaes/dev-metrics/releases"><img src="https://img.shields.io/github/v/release/Pedro-Magalhaes/dev-metrics" alt="Release"></a>
+</div>
+
+<br/>
 
 O **BMT** é uma ferramenta unificada escrita em Go, projetada para **medir a duração de comandos** (como builds de C++, testes ou lints), armazenar essas métricas localmente em formato **JSON Lines** (`.jsonl`) e gerar relatórios de produtividade.
 

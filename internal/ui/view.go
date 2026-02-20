@@ -13,6 +13,19 @@ func RenderReportTable(w io.Writer, report *metrics.FullReport, totalUnit metric
 		totalHeader = fmt.Sprintf("Total (%s)", metrics.DurationUnitLabel(totalUnit))
 	}
 
+	// Mostrar intervalo do relatório se fornecido
+	if !report.Since.IsZero() || !report.Until.IsZero() {
+		sinceStr, untilStr := "-", "agora"
+		if !report.Since.IsZero() {
+			sinceStr = report.Since.Format("2006-01-02")
+		}
+		if !report.Until.IsZero() {
+			untilStr = report.Until.Format("2006-01-02")
+		}
+		fmt.Fprintf(w, "Período: Desde %s  até %s\n", sinceStr, untilStr)
+		fmt.Fprintln(w, "====================================================")
+	}
+
 	for _, proj := range report.Projects {
 		fmt.Fprintf(w, "\n%-12s : %-12s\n", "Projeto", proj.Name)
 		fmt.Fprintln(w, "====================================================")

@@ -1,5 +1,7 @@
 package metrics
 
+import "time"
+
 // BuildMetric representa os dados coletados de uma execução de build
 type BuildMetric struct {
 	Timestamp   string  `json:"timestamp"`
@@ -37,9 +39,16 @@ type ProjectSummary struct {
 	TotalBuilds   int
 }
 
+// ReportOptions define filtros e opções para geração do relatório
+type ReportOptions struct {
+	Since time.Time // Desde quando olhar os dados. Se zero, olha desde o início.
+	Until time.Time // Até quando olhar os dados. Se zero, olha até o último dado.
+}
+
 // FullReport contém todos os dados prontos para exibição
 type FullReport struct {
 	Projects       []ProjectSummary // Ordenar alfabeticamente
 	GlobalDuration float64
 	GlobalBuilds   int
+	ReportOptions
 }

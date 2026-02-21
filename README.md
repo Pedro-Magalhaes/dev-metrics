@@ -1,11 +1,15 @@
 # BMT - Build Metric Tool 
-<div align="left">
-  <img src="./assets/bmt_banner.png" alt="bmt - Build Metrics Tool Logo" width="400" />
+<div>
+  <div align="center">
+    <img src="./assets/bmt_banner.png" alt="bmt - Build Metrics Tool Logo" width="400" />
+  </div>
   
-  <img src="https://github.com/Pedro-Magalhaes/dev-metrics/actions/workflows/build.yml/badge.svg" alt="Build">
-  <img src="https://github.com/Pedro-Magalhaes/dev-metrics/actions/workflows/ci.yml/badge.svg" alt="Tests">
-  <a href="https://app.codecov.io/github/Pedro-Magalhaes/dev-metrics"><img src="https://codecov.io/gh/Pedro-Magalhaes/dev-metrics/branch/main/graph/badge.svg" alt="Codecov"></a>
-  <a href="https://github.com/Pedro-Magalhaes/dev-metrics/releases"><img src="https://img.shields.io/github/v/release/Pedro-Magalhaes/dev-metrics" alt="Release"></a>
+  <div align="center">
+    <img src="https://github.com/Pedro-Magalhaes/dev-metrics/actions/workflows/build.yml/badge.svg" alt="Build">
+    <img src="https://github.com/Pedro-Magalhaes/dev-metrics/actions/workflows/ci.yml/badge.svg" alt="Tests">
+    <a href="https://app.codecov.io/github/Pedro-Magalhaes/dev-metrics"><img src="https://codecov.io/gh/Pedro-Magalhaes/dev-metrics/branch/main/graph/badge.svg" alt="Codecov"></a>
+    <a href="https://github.com/Pedro-Magalhaes/dev-metrics/releases"><img src="https://img.shields.io/github/v/release/Pedro-Magalhaes/dev-metrics" alt="Release"></a>
+  </div>
 </div>
 
 <br/>

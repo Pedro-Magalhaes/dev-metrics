@@ -13,12 +13,6 @@ type reportKey struct {
 	Week    int
 }
 
-// ReportOptions define filtros e opções para geração do relatório
-type ReportOptions struct {
-	Since time.Time // Se zero, ignora
-	Until time.Time // Se zero, ignora
-}
-
 // GenerateReport processa o log e retorna os dados estruturados
 // Agora aceita opções de filtro
 func GenerateReport(r io.Reader, opts ReportOptions) (*FullReport, error) {
@@ -65,6 +59,7 @@ func GenerateReport(r io.Reader, opts ReportOptions) (*FullReport, error) {
 
 	// 3. Transformação de Mapas para Slices (Struct Final)
 	report := &FullReport{}
+	report.ReportOptions = opts // Preserva opções para referência futura
 	projectMap := make(map[string]*ProjectSummary)
 
 	for k, stat := range tempData {

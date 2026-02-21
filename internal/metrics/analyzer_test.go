@@ -77,6 +77,45 @@ func TestGenerateReport(t *testing.T) {
 				},
 				GlobalDuration: 30,
 				GlobalBuilds:   2,
+				ReportOptions: ReportOptions{
+					Until: parseTime(t, "2024-01-04T00:00:00Z"),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "Basic Aggregation with since filter",
+			options: ReportOptions{Since: parseTime(t, "2024-01-05T00:00:00Z")},
+			input: `
+{"project": "backend", "timestamp": "2024-01-03T10:00:00Z", "duration_sec": 10}
+{"project": "backend", "timestamp": "2024-01-04T00:00:00Z", "duration_sec": 20}
+{"project": "backend", "timestamp": "2024-01-04T12:00:00Z", "duration_sec": 200}
+{"project": "backend", "timestamp": "2024-01-05T12:00:00Z", "duration_sec": 200}
+`,
+			// 2024-01-03 é Semana 01 de 2024
+			want: &FullReport{
+				Projects: []ProjectSummary{
+					{
+						Name:          "backend",
+						TotalDuration: 200,
+						TotalBuilds:   1,
+						Weeks: []WeeklySummary{
+							{
+								WeekLabel: "2024-W01",
+								BuildStats: BuildStats{
+									TotalDuration: 200,
+									Count:         1,
+								},
+								AvgDuration: 200, // (200)/1
+							},
+						},
+					},
+				},
+				GlobalDuration: 200,
+				GlobalBuilds:   1,
+				ReportOptions: ReportOptions{
+					Since: parseTime(t, "2024-01-05T00:00:00Z"),
+				},
 			},
 			wantErr: false,
 		},

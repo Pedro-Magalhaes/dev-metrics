@@ -101,7 +101,7 @@ func TestGenerateReport(t *testing.T) {
 						TotalBuilds:   1,
 						Weeks: []WeeklySummary{
 							{
-								WeekLabel: "2024-W02",
+								WeekLabel: "2024-W01",
 								BuildStats: BuildStats{
 									TotalDuration: 200,
 									Count:         1,

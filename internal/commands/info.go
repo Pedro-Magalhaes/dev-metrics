@@ -18,22 +18,25 @@ func (c *Info) Description() string {
 }
 
 func (c *Info) Run(args []string) error {
-	out := c.Out
-	if out == nil {
-		out = os.Stdout
-	}
-	fmt.Fprintln(out, "Build Metrics Tool")
-	fmt.Fprintf(out, "Version: %s\n", metrics.Version)
-	fmt.Fprintf(out, "Commit: %s\n", metrics.GitCommit)
+	c.ensureDefaults()
+	fmt.Fprintln(c.Out, "Build Metrics Tool")
+	fmt.Fprintf(c.Out, "Version: %s\n", metrics.Version)
+	fmt.Fprintf(c.Out, "Commit: %s\n", metrics.GitCommit)
 
 	buildTime, err := time.Parse(time.RFC3339, metrics.BuildTime)
 	if err != nil {
-		fmt.Fprintf(out, "Build Time: %s\n", metrics.BuildTime)
+		fmt.Fprintf(c.Out, "Build Time: %s\n", metrics.BuildTime)
 	} else {
-		fmt.Fprintf(out, "Build Time: %s\n", buildTime.Local().Format(time.RFC3339))
+		fmt.Fprintf(c.Out, "Build Time: %s\n", buildTime.Local().Format(time.RFC3339))
 	}
-	metrics.PrintResolvedLogPath(out, "Arquivo de log: ", "")
+	metrics.PrintResolvedLogPath(c.Out, "Arquivo de log: ", "")
 	return nil
+}
+
+func (c *Info) ensureDefaults() {
+	if c.Out == nil {
+		c.Out = os.Stdout
+	}
 }
 
 func init() {

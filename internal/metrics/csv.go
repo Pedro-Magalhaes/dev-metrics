@@ -53,11 +53,11 @@ func ExportCSVFromJSONL(r io.Reader, w io.Writer, strict bool) (ScanResult, erro
 		return csvw.Write(BuildMetricCSVRow(m))
 	})
 	csvw.Flush()
-	if werr := csvw.Error(); werr != nil {
-		return res, werr
-	}
 	if err != nil {
 		return res, err
+	}
+	if werr := csvw.Error(); werr != nil {
+		return res, werr
 	}
 	return res, nil
 }

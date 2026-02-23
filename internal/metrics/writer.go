@@ -14,19 +14,22 @@ type fileWriter interface {
 
 // package-level variables so tests can mock filesystem operations.
 var (
-	openFile = func(name string, flag int, perm os.FileMode) (fileWriter, error) {
+	OpenFile = func(name string, flag int, perm os.FileMode) (fileWriter, error) {
 		return os.OpenFile(name, flag, perm)
+	}
+	EnsureDir = func(path string) error {
+		return EnsureLogDir(path)
 	}
 )
 
 // Save writes the metric to the specified file path in JSONL format
 func Save(m BuildMetric, filePath string) error {
 	logDir := filepath.Dir(filePath)
-	if err := EnsureLogDir(logDir); err != nil {
+	if err := EnsureDir(logDir); err != nil {
 		return err
 	}
 
-	f, err := openFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}

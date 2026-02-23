@@ -12,6 +12,7 @@ const EnvLogPath = "BUILD_METRICS_LOG"
 // Usando monkey patching simples para facilitar testes
 var EnvGetter = os.Getenv
 var HomeDirGetter = os.UserHomeDir
+var MkdirAll = os.MkdirAll
 
 // GetLogFilePath retorna o caminho final baseado na prioridade:
 // 1. override (se não for vazio)
@@ -38,7 +39,7 @@ func GetLogFilePath(override string) (string, error) {
 //
 // Importante: este método espera receber um caminho de diretório (ex.: filepath.Dir(logFilePath)).
 func EnsureLogDir(dirPath string) error {
-	return os.MkdirAll(dirPath, 0755)
+	return MkdirAll(dirPath, 0755)
 }
 
 // PrintResolvedLogPath resolves the log file path (using same priority as GetLogFilePath)

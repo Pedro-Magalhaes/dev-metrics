@@ -3,11 +3,14 @@ package commands
 import (
 	metrics "dev-metrics/internal/metrics"
 	"fmt"
+	"io"
 	"os"
 	"time"
 )
 
-type Info struct{}
+type Info struct {
+	Out io.Writer
+}
 
 func (c *Info) Name() string { return "info" }
 func (c *Info) Description() string {
@@ -15,18 +18,25 @@ func (c *Info) Description() string {
 }
 
 func (c *Info) Run(args []string) error {
-	fmt.Println("Build Metrics Tool")
-	fmt.Printf("Version %s\n", metrics.Version)
-	fmt.Printf("Commit: %s\n", metrics.GitCommit)
+	c.ensureDefaults()
+	fmt.Fprintln(c.Out, "Build Metrics Tool")
+	fmt.Fprintf(c.Out, "Version: %s\n", metrics.Version)
+	fmt.Fprintf(c.Out, "Commit: %s\n", metrics.GitCommit)
 
 	buildTime, err := time.Parse(time.RFC3339, metrics.BuildTime)
 	if err != nil {
-		fmt.Printf("Build Time: %s\n", metrics.BuildTime)
+		fmt.Fprintf(c.Out, "Build Time: %s\n", metrics.BuildTime)
 	} else {
-		fmt.Printf("Build Time: %s\n", buildTime.Local().Format(time.RFC3339))
+		fmt.Fprintf(c.Out, "Build Time: %s\n", buildTime.Local().Format(time.RFC3339))
 	}
-	metrics.PrintResolvedLogPath(os.Stdout, "Arquivo de log: ", "")
+	metrics.PrintResolvedLogPath(c.Out, "Arquivo de log: ", "")
 	return nil
+}
+
+func (c *Info) ensureDefaults() {
+	if c.Out == nil {
+		c.Out = os.Stdout
+	}
 }
 
 func init() {

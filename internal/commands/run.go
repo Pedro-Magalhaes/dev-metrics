@@ -8,6 +8,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"os/user"
@@ -16,7 +17,15 @@ import (
 	"time"
 )
 
-type ExecCommand struct{}
+type ExecCommand struct {
+	Out          io.Writer
+	Err          io.Writer
+	Runner       func(ctx context.Context, args []string) (float64, int)
+	GitInfo      func() (string, string, string)
+	MetricsSaver func(metrics.BuildMetric, string) error
+	UserInfo     func() (*user.User, error)
+	Hostname     func() (string, error)
+}
 
 func (c *ExecCommand) Name() string { return "run" }
 func (c *ExecCommand) Description() string {
@@ -24,12 +33,17 @@ func (c *ExecCommand) Description() string {
 }
 
 func (c *ExecCommand) Run(args []string) error {
-	fs := flag.NewFlagSet("run", flag.ExitOnError)
+	// Defaults for dependencies
+	c.ensureDefaults()
+
+	fs := flag.NewFlagSet("run", flag.ContinueOnError)
+	fs.SetOutput(c.Out)
 	logFlag := fs.String("log", "", "Caminho customizado para o arquivo de log")
 
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "Uso: bmt run [-log path] <comando> [args...]\n")
 		fs.PrintDefaults()
+		// Note: PrintResolvedLogPath writes to fs.Output() internally if passed
 		metrics.PrintResolvedLogPath(fs.Output(), "Arquivo de log: ", fs.Lookup("log").Value.String())
 	}
 	if err := fs.Parse(args); err != nil {
@@ -60,12 +74,12 @@ func (c *ExecCommand) Run(args []string) error {
 		cancel()
 	}()
 
-	duration, exitCode := runner.Run(ctx, cmdArgs)
+	duration, exitCode := c.Runner(ctx, cmdArgs)
 
 	// 2. Coleta metadados
-	currUser, _ := user.Current()
-	hostname, _ := os.Hostname()
-	branch, commit, project := git.GetInfo()
+	currUser, _ := c.UserInfo()
+	hostname, _ := c.Hostname()
+	branch, commit, project := c.GitInfo()
 
 	status := "success"
 	if exitCode != 0 {
@@ -77,10 +91,15 @@ func (c *ExecCommand) Run(args []string) error {
 		status = "interrupted"
 	}
 
+	username := "unknown"
+	if currUser != nil {
+		username = currUser.Username
+	}
+
 	// 3. Monta a métrica
 	metric := metrics.BuildMetric{
 		Timestamp:   time.Now().Format(time.RFC3339),
-		User:        currUser.Username,
+		User:        username,
 		Hostname:    hostname,
 		OS:          runtime.GOOS,
 		Project:     project,
@@ -94,12 +113,36 @@ func (c *ExecCommand) Run(args []string) error {
 	}
 
 	// 4. Salva (falha silenciosa para não atrapalhar o dev)
-	if err := metrics.Save(metric, logPath); err != nil {
-		fmt.Fprintf(os.Stderr, "[Metrics Error] %v\n", err)
+	if err := c.MetricsSaver(metric, logPath); err != nil {
+		fmt.Fprintf(c.Err, "[Metrics Error] %v\n", err)
 	}
 	// DEBUG
 
 	return nil
+}
+
+func (c *ExecCommand) ensureDefaults() {
+	if c.Out == nil {
+		c.Out = os.Stdout
+	}
+	if c.Err == nil {
+		c.Err = os.Stderr
+	}
+	if c.Runner == nil {
+		c.Runner = runner.Run
+	}
+	if c.GitInfo == nil {
+		c.GitInfo = git.GetInfo
+	}
+	if c.MetricsSaver == nil {
+		c.MetricsSaver = metrics.Save
+	}
+	if c.UserInfo == nil {
+		c.UserInfo = user.Current
+	}
+	if c.Hostname == nil {
+		c.Hostname = os.Hostname
+	}
 }
 
 func init() {

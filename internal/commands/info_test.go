@@ -94,3 +94,20 @@ func TestInfo_Metadata(t *testing.T) {
 		t.Errorf("Description() is empty")
 	}
 }
+
+func TestInfo_Aliases(t *testing.T) {
+	c := &commands.Info{}
+	aliases := c.Aliases()
+	expected := []string{"version", "v"}
+
+	if len(aliases) != len(expected) {
+		t.Errorf("Aliases() = %v, want %v", aliases, expected)
+		return
+	}
+
+	for i, alias := range expected {
+		if aliases[i] != alias {
+			t.Errorf("Aliases()[%d] = %q, want %q", i, aliases[i], alias)
+		}
+	}
+}

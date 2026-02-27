@@ -130,3 +130,27 @@ func TestExportCommand_Metadata(t *testing.T) {
 		t.Errorf("Description() is empty")
 	}
 }
+
+func TestExportCommand_EnsureDefaults(t *testing.T) {
+	c := &commands.ExportCommand{
+		Out: &bytes.Buffer{}, // evita usar os.Stdout real
+		Err: &bytes.Buffer{}, // evita usar os.Stderr real
+	}
+	c.Run([]string{}) // Call Run to trigger ensureDefaults
+
+	if c.Out == nil {
+		t.Error("Out is not set")
+	}
+	if c.Err == nil {
+		t.Error("Err is not set")
+	}
+	if c.MetricsOpener == nil {
+		t.Error("MetricsOpener is not set")
+	}
+	if c.MetricsSaver == nil {
+		t.Error("MetricsSaver is not set")
+	}
+	if c.FileCreator == nil {
+		t.Error("FileCreator is not set")
+	}
+}

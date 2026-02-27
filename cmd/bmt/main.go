@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"dev-metrics/internal/commands"
 	_ "dev-metrics/internal/commands" // O "_" dispara os inits e registra os comandos
@@ -15,16 +16,18 @@ func main() {
 		fmt.Println("BMT - Build Metric Tool")
 		fmt.Println("\nComandos disponíveis:")
 
-		// Ordena os nomes para exibição bonita
-		keys := make([]string, 0, len(commands.Registry))
-		for k := range commands.Registry {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
+		sortedCommands := make([]commands.Command, len(commands.CommandsList))
+		copy(sortedCommands, commands.CommandsList)
+		sort.Slice(sortedCommands, func(i, j int) bool {
+			return sortedCommands[i].Name() < sortedCommands[j].Name()
+		})
 
-		for _, k := range keys {
-			cmd := commands.Registry[k]
-			fmt.Printf("  %-10s %s\n", cmd.Name(), cmd.Description())
+		for _, cmd := range sortedCommands {
+			s := cmd.Name()
+			if len(cmd.Aliases()) > 0 {
+				s += " (" + strings.Join(cmd.Aliases(), ", ") + ")"
+			}
+			fmt.Printf("  %s:\n\t%s\n", s, cmd.Description())
 		}
 	}
 

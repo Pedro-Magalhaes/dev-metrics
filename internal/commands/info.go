@@ -33,6 +33,10 @@ func (c *Info) Run(args []string) error {
 	return nil
 }
 
+func (c *Info) Aliases() []string {
+	return []string{"version", "v"}
+}
+
 func (c *Info) ensureDefaults() {
 	if c.Out == nil {
 		c.Out = os.Stdout

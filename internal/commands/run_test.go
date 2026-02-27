@@ -131,3 +131,50 @@ func TestExecCommand_Metadata(t *testing.T) {
 		t.Errorf("Description() is empty")
 	}
 }
+
+func TestExecCommand_Aliases(t *testing.T) {
+	c := &commands.ExecCommand{}
+	aliases := c.Aliases()
+	expected := []string{"exec", "r"}
+
+	if len(aliases) != len(expected) {
+		t.Errorf("Aliases() = %v, want %v", aliases, expected)
+		return
+	}
+
+	for i, alias := range expected {
+		if aliases[i] != alias {
+			t.Errorf("Aliases()[%d] = %q, want %q", i, aliases[i], alias)
+		}
+	}
+}
+
+func TestExecCommand_ensureDefaults(t *testing.T) {
+	var stdout, stderr bytes.Buffer // mock para não usar os.Stdout e os.Stderr reais
+	c := &commands.ExecCommand{
+		Out: &stdout,
+		Err: &stderr,
+	}
+	c.Run([]string{}) // Call Run to trigger ensureDefaults
+	if c.Out == nil {
+		t.Error("Out is not set")
+	}
+	if c.Err == nil {
+		t.Error("Err is not set")
+	}
+	if c.Runner == nil {
+		t.Error("Runner is not set")
+	}
+	if c.GitInfo == nil {
+		t.Error("GitInfo is not set")
+	}
+	if c.MetricsSaver == nil {
+		t.Error("MetricsSaver is not set")
+	}
+	if c.UserInfo == nil {
+		t.Error("UserInfo is not set")
+	}
+	if c.Hostname == nil {
+		t.Error("Hostname is not set")
+	}
+}

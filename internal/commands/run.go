@@ -53,6 +53,7 @@ func (c *ExecCommand) Run(args []string) error {
 	cmdArgs := fs.Args()
 
 	if len(cmdArgs) < 1 {
+		fs.Usage()
 		return errors.New("nenhum comando fornecido para execução")
 	}
 
@@ -119,6 +120,10 @@ func (c *ExecCommand) Run(args []string) error {
 	// DEBUG
 
 	return nil
+}
+
+func (c *ExecCommand) Aliases() []string {
+	return []string{"exec", "r"}
 }
 
 func (c *ExecCommand) ensureDefaults() {

@@ -4,7 +4,7 @@ import (
 	"dev-metrics/internal/metrics"
 	"io"
 	"reflect"
-	"sort"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -210,12 +210,8 @@ func equivalentStringSlices(t *testing.T, a, b []string) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	sort.Slice(a, func(i, j int) bool {
-		return a[i] < a[j]
-	})
-	sort.Slice(b, func(i, j int) bool {
-		return b[i] < b[j]
-	})
+	slices.Sort(a)
+	slices.Sort(b)
 	for i := range a {
 		if a[i] != b[i] {
 			return false

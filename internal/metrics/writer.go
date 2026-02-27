@@ -29,6 +29,8 @@ func Save(m BuildMetric, filePath string) error {
 		return err
 	}
 
+	// Usando append + JSONL obtemos escrita atômica sem problemas de concorrência, dispensando locks adicionais.
+	// A atomicidade é garantida se a string for escrita em uma única chamada de WriteString com tamanho menor que o page size do sistema (geralmente 4KB).
 	f, err := OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err

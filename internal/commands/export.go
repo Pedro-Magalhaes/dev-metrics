@@ -19,12 +19,11 @@ type ExportCommand struct {
 
 func (c *ExportCommand) Name() string { return "export" }
 func (c *ExportCommand) Description() string {
-	return "Executa e mede um comando (ex: mtx export -out path/to/new.csv -log path/to/file.jsonl)"
+	return "Exporta as métricas salvas em formato CSV"
 }
 
 func (c *ExportCommand) Run(args []string) error {
 	c.ensureDefaults()
-
 	fs := flag.NewFlagSet("export", flag.ContinueOnError)
 	fs.SetOutput(c.Out)
 
@@ -54,7 +53,7 @@ func (c *ExportCommand) Run(args []string) error {
 
 	var out io.Writer
 	if *outPath == "-" {
-		out = os.Stdout
+		out = c.Out
 	} else {
 		if err := metrics.EnsureLogDir(filepath.Dir(*outPath)); err != nil {
 			return fmt.Errorf("erro ao criar diretório de saída: %v\n", err)
@@ -104,6 +103,10 @@ func (c *ExportCommand) ensureDefaults() {
 			return os.Create(name)
 		}
 	}
+}
+
+func (c *ExportCommand) Aliases() []string {
+	return []string{}
 }
 
 func init() {

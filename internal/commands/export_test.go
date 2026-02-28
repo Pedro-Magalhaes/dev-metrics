@@ -136,6 +136,7 @@ func TestExportCommand_EnsureDefaults(t *testing.T) {
 		Out: &bytes.Buffer{}, // evita usar os.Stdout real
 		Err: &bytes.Buffer{}, // evita usar os.Stderr real
 	}
+	//nolint
 	c.Run([]string{}) // Call Run to trigger ensureDefaults
 
 	if c.Out == nil {

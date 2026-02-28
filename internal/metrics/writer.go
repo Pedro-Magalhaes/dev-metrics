@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -35,7 +36,11 @@ func Save(m BuildMetric, filePath string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func(fs fileWriter) {
+		if err := fs.Close(); err != nil {
+			log.Default().Println(err)
+		}
+	}(f)
 
 	jsonData, err := json.Marshal(m)
 	if err != nil {

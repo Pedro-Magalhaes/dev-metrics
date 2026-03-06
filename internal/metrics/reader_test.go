@@ -130,8 +130,8 @@ func TestJSONLLineError_Error(t *testing.T) {
 			if got != tt.wantString {
 				t.Errorf("Error() = %v, want %v", got, tt.wantString)
 			}
-			if !(e.Unwrap().Error() == tt.wantError.Error()) {
-				t.Errorf("Error() = %v, want error %v", e.Err, tt.wantError)
+			if e.Unwrap().Error() != tt.wantError.Error() {
+				t.Errorf("Error() = %v, want error %v", e.Unwrap(), tt.wantError)
 			}
 		})
 	}

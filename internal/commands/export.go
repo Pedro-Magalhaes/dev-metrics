@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -32,8 +33,10 @@ func (c *ExportCommand) Run(args []string) error {
 	strict := fs.Bool("strict", false, "Falha ao encontrar linhas inválidas no JSONL")
 
 	fs.Usage = func() {
+		//nolint:errcheck
 		fmt.Fprintf(fs.Output(), "Uso: export [-out path] [-log path] \n")
 		fs.PrintDefaults()
+		//nolint:errcheck
 		metrics.PrintResolvedLogPath(fs.Output(), "Arquivo de log: ", fs.Lookup("log").Value.String())
 	}
 	if err := fs.Parse(args); err != nil {
@@ -42,39 +45,41 @@ func (c *ExportCommand) Run(args []string) error {
 
 	logPath, err := metrics.GetLogFilePath(*logOverride)
 	if err != nil {
-		return fmt.Errorf("erro ao resolver log: %v\n", err)
+		return fmt.Errorf("erro ao resolver log: %v", err)
 	}
 
 	in, err := c.MetricsOpener(logPath)
 	if err != nil {
-		return fmt.Errorf("erro ao abrir log %s: %v\n", logPath, err)
+		return fmt.Errorf("erro ao abrir log %s: %v", logPath, err)
 	}
-	defer in.Close()
+	defer Close(in)
 
 	var out io.Writer
 	if *outPath == "-" {
 		out = c.Out
 	} else {
 		if err := metrics.EnsureLogDir(filepath.Dir(*outPath)); err != nil {
-			return fmt.Errorf("erro ao criar diretório de saída: %v\n", err)
+			return fmt.Errorf("erro ao criar diretório de saída: %v", err)
 		}
 		f, err := c.FileCreator(*outPath)
 		if err != nil {
-			return fmt.Errorf("erro ao criar %s: %v\n", *outPath, err)
+			return fmt.Errorf("erro ao criar %s: %v", *outPath, err)
 		}
-		defer f.Close()
+		defer Close(f)
 		out = f
 	}
 
 	res, err := c.MetricsSaver(in, out, *strict)
 	if err != nil {
-		return fmt.Errorf("erro ao exportar: %v\n", err)
+		return fmt.Errorf("erro ao exportar: %v", err)
 	}
 
 	if *outPath != "-" {
-		fmt.Fprintf(c.Err, "exportado: %d linhas (puladas: %d) -> %s\n", res.Processed, res.Skipped, *outPath)
+		// nolint:errcheck
+		fmt.Fprintf(c.Err, "exportado: %d linhas (puladas: %d) -> %s", res.Processed, res.Skipped, *outPath)
 	} else {
-		fmt.Fprintf(c.Err, "exportado: %d linhas (puladas: %d)\n", res.Processed, res.Skipped)
+		// nolint:errcheck
+		fmt.Fprintf(c.Err, "exportado: %d linhas (puladas: %d)", res.Processed, res.Skipped)
 	}
 
 	return nil
@@ -107,6 +112,12 @@ func (c *ExportCommand) ensureDefaults() {
 
 func (c *ExportCommand) Aliases() []string {
 	return []string{}
+}
+
+func Close(f io.Closer) {
+	if err := f.Close(); err != nil {
+		log.Default().Println(err)
+	}
 }
 
 func init() {

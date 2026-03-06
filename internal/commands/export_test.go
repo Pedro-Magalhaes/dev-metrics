@@ -2,15 +2,17 @@ package commands_test
 
 import (
 	"bytes"
-	"dev-metrics/internal/commands"
-	"dev-metrics/internal/metrics"
 	"errors"
 	"io"
 	"testing"
+
+	"dev-metrics/internal/commands"
+	"dev-metrics/internal/metrics"
 )
 
 type mockReadCloser struct {
 	io.Reader
+
 	closeFunc func() error
 }
 
@@ -23,6 +25,7 @@ func (m *mockReadCloser) Close() error {
 
 type mockWriteCloser struct {
 	io.Writer
+
 	closeFunc func() error
 }
 
@@ -49,14 +52,14 @@ func TestExportCommand_Run(t *testing.T) {
 			args:         []string{"-out", "-", "-log", "test.jsonl"},
 			exportResult: metrics.ScanResult{Processed: 10, Skipped: 0},
 			wantErr:      false,
-			wantStderr:   "exportado: 10 linhas (puladas: 0)\n",
+			wantStderr:   "exportado: 10 linhas (puladas: 0)",
 		},
 		{
 			name:         "Success to File",
 			args:         []string{"-out", "output.csv", "-log", "test.jsonl"},
 			exportResult: metrics.ScanResult{Processed: 5, Skipped: 2},
 			wantErr:      false,
-			wantStderr:   "exportado: 5 linhas (puladas: 2) -> output.csv\n",
+			wantStderr:   "exportado: 5 linhas (puladas: 2) -> output.csv",
 		},
 		{
 			name:        "Open Error",
@@ -85,19 +88,19 @@ func TestExportCommand_Run(t *testing.T) {
 			c := &commands.ExportCommand{
 				Out: &stdout,
 				Err: &stderr,
-				MetricsOpener: func(name string) (io.ReadCloser, error) {
+				MetricsOpener: func(_ string) (io.ReadCloser, error) {
 					if tt.mockOpenErr != nil {
 						return nil, tt.mockOpenErr
 					}
 					return &mockReadCloser{Reader: bytes.NewBufferString(""), closeFunc: nil}, nil
 				},
-				FileCreator: func(name string) (io.WriteCloser, error) {
+				FileCreator: func(_ string) (io.WriteCloser, error) {
 					if tt.mockCreateErr != nil {
 						return nil, tt.mockCreateErr
 					}
 					return &mockWriteCloser{Writer: &bytes.Buffer{}, closeFunc: nil}, nil
 				},
-				MetricsSaver: func(in io.Reader, out io.Writer, strict bool) (metrics.ScanResult, error) {
+				MetricsSaver: func(_ io.Reader, _ io.Writer, _ bool) (metrics.ScanResult, error) {
 					if tt.mockExportErr != nil {
 						return metrics.ScanResult{}, tt.mockExportErr
 					}

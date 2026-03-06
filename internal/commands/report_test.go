@@ -12,7 +12,8 @@ import (
 func TestReportCommand_Aliases(t *testing.T) {
 	out := bytes.Buffer{}
 	c := &commands.ReportCommand{Out: &out}
-
+	//
+	//nolint
 	c.Run([]string{"-sssss", "invalid"}) // garante que ensureDefaults é chamado
 	got := c.Aliases()
 

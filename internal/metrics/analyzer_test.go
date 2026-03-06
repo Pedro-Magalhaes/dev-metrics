@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"fmt"
+	"errors"
 	"reflect"
 	"strings"
 	"testing"
@@ -265,8 +265,8 @@ func TestGenerateReport(t *testing.T) {
 
 type errorReader struct{}
 
-func (e *errorReader) Read(p []byte) (n int, err error) {
-	return 0, fmt.Errorf("simulated read error")
+func (e *errorReader) Read(_ []byte) (int, error) {
+	return 0, errors.New("simulated read error")
 }
 
 func TestGenerateReportWithInvalidReader(t *testing.T) {
@@ -281,7 +281,7 @@ func TestGenerateReportWithInvalidReader(t *testing.T) {
 
 // Funções auxiliares de teste
 
-// transforma data em string para time.Time
+// transforma data em string para [time.Time].
 func parseTime(t *testing.T, timeStr string) time.Time {
 	t.Helper()
 	parsed, err := time.Parse(time.RFC3339, timeStr)

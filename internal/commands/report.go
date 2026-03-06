@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"time"
 
@@ -41,14 +42,18 @@ func (c *ReportCommand) Run(args []string) error {
 
 	logPath, err := metrics.PrintResolvedLogPath(c.Out, "Usando arquivo de log: ", *logFlag)
 	if err != nil {
-		return fmt.Errorf("Erro ao obter path do arquivo de log: %v\n", err)
+		return fmt.Errorf("erro ao obter path do arquivo de log: %v", err)
 	}
 
 	file, err := c.FileOpener(logPath)
 	if err != nil {
-		return fmt.Errorf("Erro ao abrir log (%s): %v", logPath, err)
+		return fmt.Errorf("erro ao abrir log (%s): %v", logPath, err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Default().Println(err)
+		}
+	}()
 
 	// Parse das opções
 	opts := metrics.ReportOptions{}
@@ -76,7 +81,7 @@ func (c *ReportCommand) Run(args []string) error {
 	// Geração do relatório
 	reportData, err := metrics.GenerateReport(file, opts)
 	if err != nil {
-		return fmt.Errorf("Erro ao processar dados: %v", err)
+		return fmt.Errorf("erro ao processar dados: %v", err)
 	}
 
 	// Passamos os.Stdout para que ele escreva no terminal

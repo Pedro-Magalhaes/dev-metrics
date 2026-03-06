@@ -140,7 +140,7 @@ func TestExportCSVFromJSONL(t *testing.T) {
 			if tt.wantErr {
 				t.Fatal("ExportCSVFromJSONL() succeeded unexpectedly")
 			}
-			if got.Processed != tt.want.ScanResult.Processed || got.Skipped != tt.want.ScanResult.Skipped {
+			if got.Processed != tt.want.Processed || got.Skipped != tt.want.Skipped {
 				t.Errorf("ExportCSVFromJSONL() = %v, want %v", got, tt.want)
 			}
 			csvLines := strings.Split(string(writer.data), "\n")

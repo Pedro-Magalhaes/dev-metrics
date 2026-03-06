@@ -155,6 +155,7 @@ func TestExecCommand_ensureDefaults(t *testing.T) {
 		Out: &stdout,
 		Err: &stderr,
 	}
+	//nolint
 	c.Run([]string{}) // Call Run to trigger ensureDefaults
 	if c.Out == nil {
 		t.Error("Out is not set")

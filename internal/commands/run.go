@@ -117,8 +117,8 @@ func (c *ExecCommand) Run(args []string) error {
 	if err := c.MetricsSaver(metric, logPath); err != nil {
 		fmt.Fprintf(c.Err, "[Metrics Error] %v\n", err)
 	}
-	// DEBUG
 
+	fmt.Printf("\n------BMT------\nDuração do comando %s: %v segundos. Finalizado em %v\n---------------\n", cmdArgs[0], duration, time.Now().Format(time.RFC1123))
 	return nil
 }
 
